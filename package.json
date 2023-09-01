@@ -9,7 +9,7 @@
     "transpile": "babel -d lib/ src/",
     "commit-transpile": "git add lib/ && git commit --allow-empty -m \"transpiled src\"",
     "preversion": "npm test && npm run transpile && npm run commit-transpile",
-    "postversion": "git push origin master && git push --tags"
+    "postversion": "git push origin main && git push --tags"
   },
   "repository": {
     "type": "git",
