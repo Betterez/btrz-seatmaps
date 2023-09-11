@@ -18,6 +18,15 @@ class SeatmapSection {
     };
   }
 
+  static get LABELS () {
+    return {
+        section: "Section",
+        row: "Row",
+        seat: "Seat",
+        status: "Status"
+    };
+  }
+
   static get LABEL_TYPES () {
     return {
       Number: 1,
@@ -39,7 +48,13 @@ class SeatmapSection {
     };
   };
 
-  constructor(containerId, section, events = [], classes = SeatmapSection.CLASSES) {
+  constructor(
+    containerId,
+    section,
+    events = [],
+    classes = SeatmapSection.CLASSES,
+    labels = SeatmapSection.LABELS
+  ) {
     this.containerId = containerId;
     
     this.availableCols = section.availableCols || 5;
@@ -90,6 +105,7 @@ class SeatmapSection {
     this.rowLabelRange = section.rowLabelRange;
     this.events = events;
     this.classes = classes;
+    this.labels = labels;
 
     this.#setSeatmap();
   }
@@ -134,7 +150,7 @@ class SeatmapSection {
         }
 
         if (elem.type === "seat") {
-          e.title = this.#getSeatTitle(elem, this.sectionName);
+          e.title = this.#getSeatTitle(elem, this.sectionName, this.labels);
         }
 
         this.events.forEach((evt) => {
@@ -423,11 +439,11 @@ class SeatmapSection {
     return seatRowLabel;
   }
 
-  #getSeatTitle(elem, sectionName) {
-    const seat = elem.label ? `Seat: ${elem.label}` : "";
-    const row = elem.rowLabel ? `Row: ${elem.rowLabel}` : "";
-    const status = `Status: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)}`;
-    const section = `Section: ${sectionName}`;
+  #getSeatTitle(elem, sectionName, labels) {
+    const seat = elem.label ? `${labels.seat}: ${elem.label}` : "";
+    const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel}` : "";
+    const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)}`;
+    const section = `${labels.section}: ${sectionName}`;
     return `${section} - ${row} - ${seat} - ${status}`;
   }
 
