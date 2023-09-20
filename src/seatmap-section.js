@@ -59,48 +59,21 @@ class SeatmapSection {
     
     this.availableCols = section.availableCols || 5;
     this.availableRows = section.availableRows || 15;
-    
-    this.seatsPerRowLeft = section.seatsPerRowLeft;   
-    this.numberOfSeatsPerRowLeft = 2;
-    if (typeof section.seatsPerRowLeft !== "undefined") {
-      this.numberOfSeatsPerRowLeft = typeof section.seatsPerRowLeft.key !== "undefined" ?
-        parseInt(section.seatsPerRowLeft.key, 10) :
-        parseInt(section.seatsPerRowLeft, 10); 
-    }
-    
-    this.seatsPerRowRight = section.seatsPerRowRight;
-    this.numberOfSeatsPerRowRight = 2;
-    if (typeof section.seatsPerRowRight !== "undefined") {
-      this.numberOfSeatsPerRowRight = typeof section.seatsPerRowRight.key !== "undefined" ?
-        parseInt(section.seatsPerRowRight.key, 10) :
-        parseInt(section.seatsPerRowRight, 10); 
-    }
-
+    this.seatsPerRowLeft = section.seatsPerRowLeft || 2;
+    this.seatsPerRowRight = section.seatsPerRowRight || 2;
     this.rowsEnumNoGaps = section.rowsEnumNoGaps;
     this.elements = section.elements || [];
     this.seats = section.seats || [];
     this.seatsWithStatus = section.seatsWithStatus || [];
-    this.enumType = section.enumType;
-    this.enumerationType = section.enumType && section.enumType.key ?
-      section.enumType.key :
-      section.enumType || SeatmapSection.ENUMERATION_TYPES.Sequencial;
-    this.enumDir = section.enumDir;
-    this.enumerationDir = section.enumDir && section.enumDir.key ?
-      section.enumDir.key :
-      section.enumDir || SeatmapSection.ENUMERATION_TYPES.Left,
+    this.enumType = section.enumType || SeatmapSection.ENUMERATION_TYPES.Sequencial;
+    this.enumDir = section.enumDir || SeatmapSection.ENUMERATION_TYPES.Left,
     this.startingSeatLabel = section.startingSeatLabel || 1,
-    this.rowLabelType = section.rowLabelType;
-    this.rowLabelTypeKey = section.rowLabelType && section.rowLabelType.key ?
-      section.rowLabelType.key :
-      section.rowLabelType || SeatmapSection.LABEL_TYPES.Number;
-    this.seatLabelType = section.seatLabelType;
-    this.seatLabelTypeKey = section.seatLabelType && section.seatLabelType.key ?
-      section.seatLabelType.key :
-      section.seatLabelType || SeatmapSection.LABEL_TYPES.Number;
+    this.rowLabelType = section.rowLabelType || SeatmapSection.LABEL_TYPES.Number;
+    this.seatLabelType = section.seatLabelType || SeatmapSection.LABEL_TYPES.Number;
     this.startingRowLabel = section.startingRowLabel || 1;
     this.showRowLabels = section.showRowLabels;
     this.lastRowNoGap = section.lastRowNoGap;
-    this.sectionName = section.sectionName || "Main section";
+    this.sectionName = section.name || "Main section";
     this.capacity = section.capacity || 60;
     this.rowLabelRange = section.rowLabelRange;
     this.events = events;
@@ -130,6 +103,12 @@ class SeatmapSection {
       container.style.setProperty("--columns", this.availableCols);
       container.style.setProperty("grid-template-rows", `repeat(${this.availableRows}, var(--seat))`);
       container.innerHTML = "";
+
+      const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
+      const sectionNameContainer = this.#createHTMLElement("div", "bg-info, uppercase, fs6, color-info-lightest, box-shadow-black-10, border, border-info-light, inline-block, rounded-max, px2, line-height-4", this.sectionName);
+      sectionNameWrapper.appendChild(sectionNameContainer);
+      container.appendChild(sectionNameWrapper);
+
       [
         ...this.corridor,
         ...this.elements,
@@ -154,10 +133,19 @@ class SeatmapSection {
         }
 
         this.events.forEach((evt) => {
-          if (
-            (!evt.elementType.startsWith("!") && evt.elementType === elem.type) ||
-            (evt.elementType.startsWith("!") && evt.elementType.slice(1) !== elem.type)
-          ) {
+          let appliesEvent = false;
+          if (evt.elementType) {
+            appliesEvent = appliesEvent ||
+                           (!evt.elementType.startsWith("!") && evt.elementType === elem.type) ||
+                           (evt.elementType.startsWith("!") && evt.elementType.slice(1) !== elem.type);
+          }
+          if (evt.elementStatus) {
+            appliesEvent = evt.elementType ?
+              appliesEvent && (evt.elementStatus.map((s) => s.trim()).includes(elem.status)) :
+              appliesEvent || (evt.elementStatus.map((s) => s.trim()).includes(elem.status));
+          }
+
+          if (appliesEvent) {
             e.addEventListener(evt.type || "click", (target) => {
               evt.cb(target, e, elem);
             });
@@ -200,7 +188,7 @@ class SeatmapSection {
   #updateFacilities() {
     const filteredElements = [];
     // eslint-disable-next-line no-param-reassign
-    this.availableCols = this.numberOfSeatsPerRowLeft + this.numberOfSeatsPerRowRight + 1;
+    this.availableCols = this.seatsPerRowLeft + this.seatsPerRowRight + 1;
 
     this.elements.forEach((ele) => {
         if (ele.type === "driver") {
@@ -248,17 +236,17 @@ class SeatmapSection {
         const showLabel = this.showRowLabels && (!rowsWithoutLabels.length || !rowsWithoutLabels.includes(rIndex + 1));
           this.corridor.push({
             row: rIndex + startingRowPosition,
-            col: this.numberOfSeatsPerRowLeft + 1,
+            col: this.seatsPerRowLeft + 1,
             height: 1,
             width: 1,
             type: "corridor",
             classes: SeatmapSection.CLASSES.corridor,
             label: showLabel ? nextRowValue : undefined,
-            alternativeLabel: this.rowLabelTypeKey === SeatmapSection.LABEL_TYPES.Number ? rIndex + 1 : String.fromCharCode(96 + rIndex + 1).toUpperCase()
+            alternativeLabel: this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ? rIndex + 1 : String.fromCharCode(96 + rIndex + 1).toUpperCase()
           });
 
         if (showLabel || !this.rowsEnumNoGaps) {
-            nextRowValue = this.rowLabelTypeKey === SeatmapSection.LABEL_TYPES.Number ?
+            nextRowValue = this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ?
                 parseInt(nextRowValue, 10) + 1 :
                 String.fromCharCode(nextRowValue.charCodeAt(0) + 1);
         }
@@ -336,9 +324,9 @@ class SeatmapSection {
     rows.forEach((row, rIndex) => {
         this.seats
             .filter((s) => s.row === rIndex + 1)
-            .sort((a, b) => (this.enumerationDir === SeatmapSection.ENUMERATION_DIRECTION.Left ? a.col - b.col : b.col - a.col))
+            .sort((a, b) => (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left ? a.col - b.col : b.col - a.col))
             .forEach((s, index) => {
-                if (this.enumerationType === SeatmapSection.ENUMERATION_TYPES.PerRow) {
+                if (this.enumType === SeatmapSection.ENUMERATION_TYPES.PerRow) {
                     if (rowNumber !== s.row) {
                         seatLabel = this.startingSeatLabel;
                         rowNumber++;
@@ -346,7 +334,7 @@ class SeatmapSection {
                 }
                 s.label = s.label || seatLabel;
                 s.index = seatIndex;
-                seatLabel = this.seatLabelTypeKey === SeatmapSection.LABEL_TYPES.Number ?
+                seatLabel = this.seatLabelType === SeatmapSection.LABEL_TYPES.Number ?
                     parseInt(seatLabel, 10) + 1 :
                     String.fromCharCode(seatLabel.charCodeAt(0) + 1);
                 seatIndex++;
@@ -432,7 +420,7 @@ class SeatmapSection {
         return r.row === rowNumber - 1;
       });
       seatRowLabel = (seatRow.label || seatRow.alternativeLabel);
-      seatRowLabel = !this.showRowLabels || this.rowLabelTypeKey === SeatmapSection.LABEL_TYPES.Number ?
+      seatRowLabel = !this.showRowLabels || this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ?
         parseInt(seatRowLabel, 10) + 1 :
         String.fromCharCode(seatRowLabel.charCodeAt(0) + 1);
     }
@@ -500,9 +488,9 @@ class SeatmapSection {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
           const index = parseInt(focus.dataset.index, 10);
-          for (let i = (index + this.numberOfSeatsPerRowLeft + this.numberOfSeatsPerRowRight);
+          for (let i = (index + this.seatsPerRowLeft + this.seatsPerRowRight);
               i < this.seats.length + 1;
-              i += this.numberOfSeatsPerRowLeft + this.numberOfSeatsPerRowRight) {
+              i += this.seatsPerRowLeft + this.seatsPerRowRight) {
               if (this.#setFocusOnSeat(i)) {
                   break;
               }
@@ -526,12 +514,12 @@ class SeatmapSection {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
           const index = parseInt(focus.dataset.index, 10);
-          const exception = this.lastRowNoGap && (index > this.seats.length - this.numberOfSeatsPerRowRight);
+          const exception = this.lastRowNoGap && (index > this.seats.length - this.seatsPerRowRight);
 
           // eslint-disable-next-line max-len
-          for (let i = (index - this.numberOfSeatsPerRowLeft - this.numberOfSeatsPerRowRight - (exception ? 1 : 0));
+          for (let i = (index - this.seatsPerRowLeft - this.seatsPerRowRight - (exception ? 1 : 0));
               i > 0;
-              i -= this.numberOfSeatsPerRowLeft + this.numberOfSeatsPerRowRight) {
+              i -= this.seatsPerRowLeft + this.seatsPerRowRight) {
               if (this.#setFocusOnSeat(i)) {
                   break;
               }
@@ -573,7 +561,7 @@ class SeatmapSection {
 
     // Arrow right
     if (evt.keyCode === 39) {
-        if (this.enumerationDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
+        if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
             this.#onJumpToNextSeat();
         } else {
             this.#onJumpToPrevSeat();
@@ -587,7 +575,7 @@ class SeatmapSection {
 
     // Arrow left
     if (evt.keyCode === 37) {
-        if (this.enumerationDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
+        if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
             this.#onJumpToPrevSeat();
         } else {
             this.#onJumpToNextSeat();

@@ -7,12 +7,8 @@ describe("Seatmap section", function () {
     "grid",
     {
       rowsEnumNoGaps: true,
-      seatsPerRowLeft: {
-        key: 2, value: "2"
-      },
-      seatsPerRowRight: {
-        key: 2, value: "2"
-      },
+      seatsPerRowLeft: 2,
+      seatsPerRowRight: 2,
       elements: [
         {
           type: "door",
@@ -47,7 +43,7 @@ describe("Seatmap section", function () {
       startingRowLabel: "1",
       showRowLabels: true,
       lastRowNoGap: true,
-      sectionName: "Main",
+      name: "Main",
       capacity: 57,
       seats: [],
       rowLabelRange: ""
@@ -129,7 +125,7 @@ describe("Seatmap section", function () {
     it("Should build seat titles properly.", () => {
       sectionCoachBus.draw();
       expect(document.querySelectorAll("#grid [data-type='seat'][data-index='1'][data-status='available']")[0].title).to.eql("Section: Main - Row: 1 - Seat: 1 - Status: Available");
-      new SeatmapSection("grid",{}, [], {}, {section: "Section", row: "Rangée", seat: "Siège", status: "Statut"}).draw();
+      new SeatmapSection("grid", {}, [], {}, {section: "Section", row: "Rangée", seat: "Siège", status: "Statut"}).draw();
       expect(document.querySelectorAll("#grid [data-type='seat'][data-index='1'][data-status='available']")[0].title).to.eql("Section: Main section - Rangée: 1 - Siège: 1 - Statut: Available");
     });
 
