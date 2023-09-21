@@ -7,7 +7,7 @@ class SeatmapSection {
         wc: "wc",
         seat: "grid-item",
         stairway: "stairway",
-        table: "table",
+        table: "busTable",
         door: "door",
         doorLeft: "leftDoor",
         driver: "driver",
@@ -23,7 +23,9 @@ class SeatmapSection {
         section: "Section",
         row: "Row",
         seat: "Seat",
-        status: "Status"
+        status: "Status",
+        seatClass: "Seat class",
+        fee: "Fee"
     };
   }
 
@@ -51,9 +53,7 @@ class SeatmapSection {
   constructor(
     containerId,
     section,
-    events = [],
-    classes = SeatmapSection.CLASSES,
-    labels = SeatmapSection.LABELS
+    settings = {}
   ) {
     this.containerId = containerId;
     
@@ -76,9 +76,11 @@ class SeatmapSection {
     this.sectionName = section.name || "Main section";
     this.capacity = section.capacity || 60;
     this.rowLabelRange = section.rowLabelRange;
-    this.events = events;
-    this.classes = classes;
-    this.labels = labels;
+    this.events = settings.events || [];
+    this.classes = settings.classes || SeatmapSection.CLASSES;
+    this.labels = settings.labels || SeatmapSection.LABELS;
+    this.seatClasses = settings.seatClasses || [];
+    this.fees = settings.fees || [];
 
     this.#setSeatmap();
   }
@@ -115,22 +117,17 @@ class SeatmapSection {
         ...this.seats
       ].forEach((elem) => {
         const e = this.#createHTMLElement("div", elem.classes, elem.label || "");
-        e.style["grid-area"] = `${elem.row}/${elem.col}/${elem.row + elem.height}/${elem.col + elem.width}`;
         const dataset = this.#getSeatDataset(elem);
         Object.keys(dataset).forEach((k) => {
           e.dataset[k] = dataset[k];
         });
 
-        if (elem.bgcolor) {
-          e.style.backgroundColor = elem.bgcolor;
-        }
-        if (elem.color) {
-          e.style.color = elem.color;
-        }
 
         if (elem.type === "seat") {
           e.title = this.#getSeatTitle(elem, this.sectionName, this.labels);
         }
+
+        this.#setElementStyle(e.style, elem)
 
         this.events.forEach((evt) => {
           let appliesEvent = false;
@@ -393,10 +390,10 @@ class SeatmapSection {
     if (elem.status) {
       dataset.status = elem.status;
     }
-    if (elem.seatClass) {
+    if (elem.seatClass && elem.seatClass !== -1) {
       dataset.seatClass = elem.seatClass;
     }
-    if (elem.fee) {
+    if (elem.fee && elem.fee !== -1) {
       dataset.fee = elem.fee;
     }
     if (elem.suggested) {
@@ -432,7 +429,51 @@ class SeatmapSection {
     const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel}` : "";
     const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)}`;
     const section = `${labels.section}: ${sectionName}`;
-    return `${section} - ${row} - ${seat} - ${status}`;
+
+    const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
+    const seatClassName = seatClass && seatClass.value ? ` - ${labels.seatClass}: ${seatClass.value}` : "";
+    const fee = this.fees.find((fee) => fee._id === elem.fee);
+    const feeName = fee && fee.value ? ` - ${labels.fee}: ${fee.value}` : "";
+
+    return `${section} - ${row} - ${seat} - ${status}${seatClassName}${feeName}`;
+  }
+
+  #setElementStyle(style, elem) {
+    style["grid-area"] = `${elem.row}/${elem.col}/${elem.row + elem.height}/${elem.col + elem.width}`;
+    if (elem.bgcolor) {
+      style.backgroundColor = elem.bgcolor;
+    }
+    if (elem.color) {
+      style.color = elem.color;
+    }
+    if (elem.seatClass && this.seatClasses) {
+      const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
+      if (seatClass) {
+        if (seatClass.bgcolor) {
+          style.backgroundColor = seatClass.bgcolor;
+        }
+        if (seatClass.color) {
+          style.color = seatClass.color;
+        }
+        if (seatClass.bordercolor) {
+          style["border-color"] = seatClass.bordercolor;
+        }
+      }
+    }
+    if (elem.fee && this.fees) {
+      const fee = this.fees.find((fee) => fee._id === elem.fee);
+      if (fee) {
+        if (fee.bgcolor) {
+          style.backgroundColor = fee.bgcolor;
+        }
+        if (fee.color) {
+          style.color = fee.color;
+        }
+        if (fee.bordercolor) {
+          style["border-color"] = fee.bordercolor;
+        }
+      }
+    }
   }
 
   #setFocusOnSeat(index) {
