@@ -423,17 +423,17 @@ class SeatmapSection {
   }
 
   #getSeatTitle(elem, sectionName, labels) {
-    const seat = elem.label ? `${labels.seat}: ${elem.label}` : "";
-    const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel}` : "";
-    const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)}`;
-    const section = `${labels.section}: ${sectionName}`;
+    const seat = elem.label ? `${labels.seat}: ${elem.label} \n` : "";
+    const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel} \n` : "";
+    const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)} \n`;
+    const section = `${labels.section}: ${sectionName} \n`;
 
     const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
-    const seatClassName = seatClass && seatClass.value ? ` - ${labels.seatClass}: ${seatClass.value}` : "";
+    const seatClassName = seatClass && seatClass.value ? `${labels.seatClass}: ${seatClass.value} \n` : "";
     const fee = this.fees.find((fee) => fee._id === elem.fee);
-    const feeName = fee && fee.value ? ` - ${labels.fee}: ${fee.value}` : "";
+    const feeName = fee && fee.value ? `${labels.fee}: ${fee.value} \n` : "";
 
-    return `${section} - ${row} - ${seat} - ${status}${seatClassName}${feeName}`;
+    return `${section}${row}${seat}${status}${seatClassName}${feeName}`;
   }
 
   #setElementStyle(style, elem) {
