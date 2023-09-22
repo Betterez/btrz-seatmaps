@@ -51,16 +51,17 @@ class SeatmapSection {
   };
 
   constructor(
-    containerId,
-    section,
+    containerId = "",
+    section = {},
     settings = {}
   ) {
     this.containerId = containerId;
     
-    this.availableCols = section.availableCols || 5;
+    typeof(settings.name) !== "undefined" ? 1 : 2
+
     this.availableRows = section.availableRows || 15;
-    this.seatsPerRowLeft = section.seatsPerRowLeft || 2;
-    this.seatsPerRowRight = section.seatsPerRowRight || 2;
+    this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
+    this.seatsPerRowRight = typeof(section.seatsPerRowRight) !== "undefined" ? section.seatsPerRowRight : 2;
     this.rowsEnumNoGaps = section.rowsEnumNoGaps;
     this.elements = section.elements || [];
     this.seats = section.seats || [];
