@@ -5,7 +5,7 @@ class SeatmapSection {
         item: "element",
         corridor: "fs7, flex, items-center, justify-around",
         wc: "wc",
-        seat: "grid-item",
+        seat: "bg-white, border, border-grey, rounded, flex, justify-around, items-center, relative, opacity5-hover, pointer",
         stairway: "stairway",
         table: "busTable",
         door: "door",
@@ -101,7 +101,7 @@ class SeatmapSection {
       container.onkeydown = (evt) => { this.#manageKeyboardNavigation(evt); };
 
       container.style.setProperty("--columns", this.availableCols);
-      container.style.setProperty("grid-template-rows", `repeat(${this.availableRows}, var(--seat))`);
+      container.style.setProperty("--rows", this.availableRows);
       container.innerHTML = "";
 
       const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
