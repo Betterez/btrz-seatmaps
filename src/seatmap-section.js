@@ -56,9 +56,6 @@ class SeatmapSection {
     settings = {}
   ) {
     this.containerId = containerId;
-    
-    typeof(settings.name) !== "undefined" ? 1 : 2
-
     this.availableRows = section.availableRows || 15;
     this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
     this.seatsPerRowRight = typeof(section.seatsPerRowRight) !== "undefined" ? section.seatsPerRowRight : 2;
