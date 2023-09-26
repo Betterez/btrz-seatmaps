@@ -83,6 +83,12 @@ class SeatmapSection {
     this.#setSeatmap();
   }
 
+  changeSeatStatus(elem, status) {
+    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + elem.height} / ${elem.col + elem.width};']`;
+    const element = document.querySelector(selector);
+    element.dataset.status = status;
+  }
+
   clearFocus() {
     const focus = document.querySelector("[data-focus]");
     if (focus) {
@@ -93,7 +99,7 @@ class SeatmapSection {
   clearSelection() {
     const selection = document.querySelectorAll(`#${this.containerId} .outline-blue`);
     selection.forEach((prev) => prev.classList.remove("outline-blue"));
-  }  
+  }
 
   draw() {
     const container = document.getElementById(this.containerId);
