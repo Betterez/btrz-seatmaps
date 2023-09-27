@@ -7,12 +7,12 @@ class SeatmapSection {
         wc: "wc",
         seat: "bg-white, border, border-grey, rounded, flex, justify-around, items-center, relative, opacity5-hover, pointer",
         stairway: "stairway",
-        table: "busTable",
+        table: "seatmap-table",
         door: "door",
-        doorLeft: "leftDoor",
+        doorLeft: "left-door",
         driver: "driver",
-        rightdriver: "driver, rightdriver",
-        gap: "gap",
+        rightdriver: "driver, right-driver",
+        gap: "seatmap-gap",
         accordionBottom: "accordion-bottom",
         accordionTop: "accordion-top"    
     };
