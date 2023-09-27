@@ -2,19 +2,20 @@
 class SeatmapSection {
   static get CLASSES () {
     return {
-        item: "element",
+        facility: "facility",
         corridor: "fs7, flex, items-center, justify-around",
         wc: "wc",
         seat: "bg-white, border, border-grey, rounded, flex, justify-around, items-center, relative, opacity5-hover, pointer",
-        stairway: "stairway",
+        stairwayVertical: "stairway-vertical",
+        stairwayHorizontal: "stairway-horizontal",
         table: "seatmap-table",
-        door: "door",
-        doorLeft: "left-door",
-        driver: "driver",
-        rightdriver: "driver, right-driver",
+        doorRight: "door-right",
+        doorLeft: "door-left",
+        driverLeft: "driver",
+        driverRight: "driver, right-driver",
         gap: "seatmap-gap",
         accordionBottom: "accordion-bottom",
-        accordionTop: "accordion-top"    
+        accordionTop: "accordion-top"
     };
   }
 
@@ -97,8 +98,8 @@ class SeatmapSection {
   }
 
   clearSelection() {
-    const selection = document.querySelectorAll(`#${this.containerId} .outline-blue`);
-    selection.forEach((prev) => prev.classList.remove("outline-blue"));
+    const selection = document.querySelectorAll(`#${this.containerId} .seatmap-outline-blue`);
+    selection.forEach((prev) => prev.classList.remove("seatmap-outline-blue"));
   }
 
   draw() {
@@ -183,7 +184,7 @@ class SeatmapSection {
   selectElement(elem) {
     const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + elem.height} / ${elem.col + elem.width};']`;
     const element = document.querySelector(selector);    
-    element.classList.add("outline-blue");
+    element.classList.add("seatmap-outline-blue");
   }  
 
   #updateFacilities() {
