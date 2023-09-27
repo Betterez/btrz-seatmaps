@@ -2,7 +2,7 @@
 class SeatmapSection {
   static get CLASSES () {
     return {
-        facility: "facility",
+        item: "item",
         corridor: "fs7, flex, items-center, justify-around",
         wc: "wc",
         seat: "bg-white, border, border-grey, rounded, flex, justify-around, items-center, relative, opacity5-hover, pointer",
@@ -48,6 +48,27 @@ class SeatmapSection {
     return {
       Left: 1,
       Right: 2
+    };
+  };
+
+  static get FACILITY_ALIGNMENT () {
+    return {
+      Left: 1,
+      Right: 2
+    };
+  };
+
+  static get FACILITY_ORIENTATION () {
+    return {
+      Horizontal: 1,
+      Vertical: 2
+    };
+  };
+
+  static get FACILITY_POSITION () {
+    return {
+      Bottom: 1,
+      Top: 2
     };
   };
 
@@ -121,7 +142,8 @@ class SeatmapSection {
         ...this.elements,
         ...this.seats
       ].forEach((elem) => {
-        const e = this.#createHTMLElement("div", elem.classes, elem.label || "");
+        const classes = this.#getElementClasses(elem);
+        const e = this.#createHTMLElement("div", classes, elem.label || "");
         const dataset = this.#getSeatDataset(elem);
         Object.keys(dataset).forEach((k) => {
           e.dataset[k] = dataset[k];
@@ -372,6 +394,43 @@ class SeatmapSection {
       });
     }
     return elem;
+  }
+
+  #getElementClasses(elem) {
+    if (elem.type === "table") {
+      return SeatmapSection.CLASSES.table;
+    }
+    if (elem.type === "wc") {
+      return SeatmapSection.CLASSES.wc;
+    }
+    if (elem.type === "item") {
+      return SeatmapSection.CLASSES.item;
+    }
+    if (elem.type === "gap") {
+      return SeatmapSection.CLASSES.gap;
+    }
+    if (elem.type === "driver") {
+      return elem.alignment.key === SeatmapSection.FACILITY_ALIGNMENT.Left ?
+        SeatmapSection.CLASSES.driverLeft :
+        SeatmapSection.CLASSES.driverRight;
+    }
+    if (elem.type === "door") {
+      return elem.alignment.key === SeatmapSection.FACILITY_ALIGNMENT.Left ?
+        SeatmapSection.CLASSES.doorLeft :
+        SeatmapSection.CLASSES.doorRight;
+    }
+    if (elem.type === "stairway") {
+      return elem.orientation.key === SeatmapSection.FACILITY_ORIENTATION.Horizontal ?
+        SeatmapSection.CLASSES.stairwayHorizontal :
+        SeatmapSection.CLASSES.stairwayVertical;
+    }
+    if (elem.type === "accordion") {
+      return elem.position.key === SeatmapSection.FACILITY_POSITION.Bottom ?
+        SeatmapSection.CLASSES.accordionBottom :
+        SeatmapSection.CLASSES.accordionTop;
+    }
+
+    return elem.classes || "";
   }
 
   #getSeatDataset(elem) {
