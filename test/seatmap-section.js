@@ -9,7 +9,7 @@ describe("Seatmap section", function () {
       rowsEnumNoGaps: true,
       seatsPerRowLeft: 2,
       seatsPerRowRight: 2,
-      elements: [
+      facilities: [
         {
           type: "door",
           row: 1,
@@ -34,7 +34,7 @@ describe("Seatmap section", function () {
       ],
       availableRows: 15,
       availableCols: 5,
-      seatsWithStatus: [],
+      customSeats: [],
       enumType: 2,
       enumDir: 2,
       startingSeatLabel: 1,
@@ -55,7 +55,7 @@ describe("Seatmap section", function () {
       rowsEnumNoGaps: true,
       seatsPerRowLeft: 2,
       seatsPerRowRight: 1,
-      elements: [
+      facilities: [
         {
           type: "door",
           row: 1,
@@ -80,7 +80,7 @@ describe("Seatmap section", function () {
       ],
       availableRows: 8,
       availableCols: 4,
-      seatsWithStatus: [],
+      customSeats: [],
       enumType: 1,
       enumDir: 1,
       startingSeatLabel: 1,
@@ -114,9 +114,9 @@ describe("Seatmap section", function () {
       expect(sectionCoachBus.availableCols).to.eql(5);
       expect(sectionCoachBus.seats.length).to.eql(57);
       expect(sectionCoachBus.getCapacity()).to.eql(57);
-      expect(sectionCoachBus.elements.filter((e) => e.type === "driver").length).to.eql(1);
-      expect(sectionCoachBus.elements.filter((e) => e.type === "door").length).to.eql(1);
-      expect(sectionCoachBus.elements.length).to.eql(2);
+      expect(sectionCoachBus.facilities.filter((e) => e.type === "driver").length).to.eql(1);
+      expect(sectionCoachBus.facilities.filter((e) => e.type === "door").length).to.eql(1);
+      expect(sectionCoachBus.facilities.length).to.eql(2);
       expect(sectionCoachBus.corridor.length).to.eql(13);
       expect(sectionCoachBus.seats.filter((s) => s.rowLabel === 14).length).to.eql(sectionCoachBus.availableCols);
       expect(sectionCoachBus.corridor.map((c) => c.label).join(",")).to.eql("1,2,3,4,5,6,7,8,9,10,11,12,13");
@@ -145,9 +145,9 @@ describe("Seatmap section", function () {
       expect(sectionShuttleBus.availableCols).to.eql(4);
       expect(sectionShuttleBus.seats.length).to.eql(22);
       expect(sectionShuttleBus.getCapacity()).to.eql(22);
-      expect(sectionShuttleBus.elements.filter((e) => e.type === "driver").length).to.eql(1);
-      expect(sectionShuttleBus.elements.filter((e) => e.type === "door").length).to.eql(1);
-      expect(sectionShuttleBus.elements.length).to.eql(2);
+      expect(sectionShuttleBus.facilities.filter((e) => e.type === "driver").length).to.eql(1);
+      expect(sectionShuttleBus.facilities.filter((e) => e.type === "door").length).to.eql(1);
+      expect(sectionShuttleBus.facilities.length).to.eql(2);
       expect(sectionShuttleBus.corridor.length).to.eql(6);
       expect(sectionShuttleBus.seats.filter((s) => s.rowLabel === "G").length).to.eql(sectionShuttleBus.availableCols);
       expect(sectionShuttleBus.corridor.map((c) => c.label).join(",")).to.eql("A,B,C,D,E,F");

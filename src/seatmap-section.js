@@ -78,13 +78,13 @@ class SeatmapSection {
     settings = {}
   ) {
     this.containerId = containerId;
-    this.availableRows = section.availableRows || 15;
+    this.availableRows = parseInt(section.availableRows, 10) || 15;
     this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
     this.seatsPerRowRight = typeof(section.seatsPerRowRight) !== "undefined" ? section.seatsPerRowRight : 2;
     this.rowsEnumNoGaps = section.rowsEnumNoGaps;
-    this.elements = section.elements || [];
+    this.facilities = section.facilities || [];
     this.seats = section.seats || [];
-    this.seatsWithStatus = section.seatsWithStatus || [];
+    this.customSeats = section.customSeats || [];
     this.enumType = section.enumType || SeatmapSection.ENUMERATION_TYPES.Sequencial;
     this.enumDir = section.enumDir || SeatmapSection.ENUMERATION_TYPES.Left,
     this.startingSeatLabel = section.startingSeatLabel || 1,
@@ -139,7 +139,7 @@ class SeatmapSection {
 
       [
         ...this.corridor,
-        ...this.elements,
+        ...this.facilities,
         ...this.seats
       ].forEach((elem) => {
         const classes = this.#getElementClasses(elem);
@@ -214,19 +214,24 @@ class SeatmapSection {
     // eslint-disable-next-line no-param-reassign
     this.availableCols = this.seatsPerRowLeft + this.seatsPerRowRight + 1;
 
-    this.elements.forEach((ele) => {
+    this.facilities.forEach((ele) => {
         if (ele.type === "driver") {
-            // eslint-disable-next-line no-param-reassign
-            ele.width = this.availableCols;
-            filteredElements.push(ele);
+          // eslint-disable-next-line no-param-reassign
+          ele.width = this.availableCols;
+          filteredElements.push(ele);
+        } else if (ele.type === "accordion") {
+          ele.width = this.availableCols;
+          ele.row = ele.position.key ===  SeatmapSection.FACILITY_POSITION.Top ? 1 : this.availableRows;
+          filteredElements.push(ele);
         } else if (ele.type === "door") {
-            filteredElements.push(ele);
+          ele.col = ele.alignment.key ===  SeatmapSection.FACILITY_ALIGNMENT.Left ? 1 : this.availableCols;
+          filteredElements.push(ele);
         } else if ((this.availableCols + 1) >= ele.col + ele.width) {
             filteredElements.push(ele);
         }
     });
     // eslint-disable-next-line no-param-reassign
-    this.elements = filteredElements;
+    this.facilities = filteredElements;
   }
 
   #buildCorridor() {
@@ -248,7 +253,7 @@ class SeatmapSection {
         ))];
     });
 
-    const driver = this.elements.find((elem) => elem.type === "driver");
+    const driver = this.facilities.find((elem) => elem.type === "driver");
     const startingRowPosition = driver ? 2 : 1;
     let rows = [];
     rows = Array.from({
@@ -264,7 +269,7 @@ class SeatmapSection {
             height: 1,
             width: 1,
             type: "corridor",
-            classes: SeatmapSection.CLASSES.corridor,
+            classes: this.classes.corridor,
             label: showLabel ? nextRowValue : undefined,
             alternativeLabel: this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ? rIndex + 1 : String.fromCharCode(96 + rIndex + 1).toUpperCase()
           });
@@ -288,7 +293,7 @@ class SeatmapSection {
     });
     rows.forEach((row, rIndex) => {
         cols.forEach((col, cIndex) => {
-            const overlaps = this.#overlapsWithFixedElement([...this.elements, ...this.corridor], rIndex + 1, cIndex + 1);
+            const overlaps = this.#overlapsWithFixedElement([...this.facilities, ...this.corridor], rIndex + 1, cIndex + 1);
             const hideSeat = overlaps.find((o) => {
                 return ["driver", "corridor"].includes(o.type);
             });
@@ -298,20 +303,20 @@ class SeatmapSection {
             if (!hideSeat) {
                 const colNumber = cIndex + 1;
                 const rowNumber = rIndex + 1;
-                const seatWithStatus = this.seatsWithStatus.find((st) => {
+                const customSeat = this.customSeats.find((st) => {
                     return st.col === colNumber && st.row === rowNumber;
                 });
                 // eslint-disable-next-line no-unneeded-ternary
                 const allowKeyNav = ["selected", "available", "accessible", "blocked", "reserved"]
-                    .includes(seatWithStatus ? seatWithStatus.status : "available") &&
+                    .includes(customSeat ? customSeat.status : "available") &&
                     (!overlaps.length || overlapsItem) ? true : false;
 
                 const rowLabel = this.#getSeatRowLabel(rowNumber);
-                const label = seatWithStatus ? seatWithStatus.label : "";
-                const status = seatWithStatus ? seatWithStatus.status : "available";
+                const label = customSeat ? customSeat.label : "";
+                const status = customSeat ? customSeat.status : "available";
                 const seat = {
                   type: "seat",
-                  classes: SeatmapSection.CLASSES.seat,
+                  classes: this.classes.seat,
                   row: rowNumber,
                   col: colNumber,
                   height: 1,
@@ -322,17 +327,17 @@ class SeatmapSection {
                   allowKeyNav,
                   overlapped: overlaps.length && !overlapsItem ? true : false
                 };
-                if (seatWithStatus && seatWithStatus.seatClass) {
-                    seat.seatClass = seatWithStatus.seatClass;
+                if (customSeat && customSeat.seatClass) {
+                    seat.seatClass = customSeat.seatClass;
                 }
-                if (seatWithStatus && seatWithStatus.fee) {
-                    seat.fee = seatWithStatus.fee;
+                if (customSeat && customSeat.fee) {
+                    seat.fee = customSeat.fee;
                 }
-                if (seatWithStatus && seatWithStatus.suggested) {
-                    seat.suggested = seatWithStatus.suggested;
+                if (customSeat && customSeat.suggested) {
+                    seat.suggested = customSeat.suggested;
                 }
-                if (seatWithStatus && seatWithStatus.female) {
-                    seat.female = seatWithStatus.female;
+                if (customSeat && customSeat.female) {
+                    seat.female = customSeat.female;
                 }
                 this.seats.push(seat);
             }
@@ -398,36 +403,36 @@ class SeatmapSection {
 
   #getElementClasses(elem) {
     if (elem.type === "table") {
-      return SeatmapSection.CLASSES.table;
+      return this.classes.table;
     }
     if (elem.type === "wc") {
-      return SeatmapSection.CLASSES.wc;
+      return this.classes.wc;
     }
     if (elem.type === "item") {
-      return SeatmapSection.CLASSES.item;
+      return this.classes.item;
     }
     if (elem.type === "gap") {
-      return SeatmapSection.CLASSES.gap;
+      return this.classes.gap;
     }
     if (elem.type === "driver") {
       return elem.alignment.key === SeatmapSection.FACILITY_ALIGNMENT.Left ?
-        SeatmapSection.CLASSES.driverLeft :
-        SeatmapSection.CLASSES.driverRight;
+        this.classes.driverLeft :
+        this.classes.driverRight;
     }
     if (elem.type === "door") {
       return elem.alignment.key === SeatmapSection.FACILITY_ALIGNMENT.Left ?
-        SeatmapSection.CLASSES.doorLeft :
-        SeatmapSection.CLASSES.doorRight;
+        this.classes.doorLeft :
+        this.classes.doorRight;
     }
     if (elem.type === "stairway") {
       return elem.orientation.key === SeatmapSection.FACILITY_ORIENTATION.Horizontal ?
-        SeatmapSection.CLASSES.stairwayHorizontal :
-        SeatmapSection.CLASSES.stairwayVertical;
+        this.classes.stairwayHorizontal :
+        this.classes.stairwayVertical;
     }
     if (elem.type === "accordion") {
       return elem.position.key === SeatmapSection.FACILITY_POSITION.Bottom ?
-        SeatmapSection.CLASSES.accordionBottom :
-        SeatmapSection.CLASSES.accordionTop;
+        this.classes.accordionBottom :
+        this.classes.accordionTop;
     }
 
     return elem.classes || "";
