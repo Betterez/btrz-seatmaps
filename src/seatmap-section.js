@@ -26,7 +26,10 @@ class SeatmapSection {
         seat: "Seat",
         status: "Status",
         seatClass: "Seat class",
-        fee: "Fee"
+        fee: "Fee",
+        female: "Female",
+        suggested: "Suggested",
+        accessible: "Accessible"
     };
   }
 
@@ -307,7 +310,7 @@ class SeatmapSection {
                     return st.col === colNumber && st.row === rowNumber;
                 });
                 // eslint-disable-next-line no-unneeded-ternary
-                const allowKeyNav = ["selected", "available", "accessible", "blocked", "reserved"]
+                const allowKeyNav = ["selected", "available", "blocked", "reserved"]
                     .includes(customSeat ? customSeat.status : "available") &&
                     (!overlaps.length || overlapsItem) ? true : false;
 
@@ -338,6 +341,9 @@ class SeatmapSection {
                 }
                 if (customSeat && customSeat.female) {
                     seat.female = customSeat.female;
+                }
+                if (customSeat && customSeat.accessible) {
+                    seat.accessible = customSeat.accessible;
                 }
                 this.seats.push(seat);
             }
@@ -471,6 +477,9 @@ class SeatmapSection {
     if (elem.female) {
       dataset.female = elem.female;
     }
+    if (elem.accessible) {
+      dataset.accessible = elem.accessible;
+    }
     return dataset;
   }
 
@@ -504,7 +513,11 @@ class SeatmapSection {
     const fee = this.fees.find((fee) => fee._id === elem.fee);
     const feeName = fee && fee.value ? `${labels.fee}: ${fee.value} \n` : "";
 
-    return `${section}${row}${seat}${status}${seatClassName}${feeName}`;
+    const isAccessible = elem.accessible ? `${labels.accessible}` : "";
+    const isFemale = elem.female ? `${labels.female}` : "";
+    const isSuggested = elem.suggested ? `${labels.suggested}` : "";
+
+    return `${section}${row}${seat}${status}${seatClassName}${feeName}${isAccessible}${isFemale}${isSuggested}`;
   }
 
   #setElementStyle(style, elem) {
