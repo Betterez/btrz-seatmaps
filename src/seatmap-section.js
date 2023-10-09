@@ -1,4 +1,5 @@
 // 👇️ named export
+//const SeatmapEvents = require("./seatmap-events.js");
 class SeatmapSection {
   static get CLASSES () {
     return {
@@ -96,7 +97,7 @@ class SeatmapSection {
     this.startingRowLabel = section.startingRowLabel || 1;
     this.showRowLabels = section.showRowLabels;
     this.lastRowNoGap = section.lastRowNoGap;
-    this.sectionName = section.name || "Main section";
+    this.sectionName = section.name || "";
     this.capacity = section.capacity || 60;
     this.rowLabelRange = section.rowLabelRange;
     this.events = settings.events || [];
@@ -135,10 +136,12 @@ class SeatmapSection {
       container.style.setProperty("--rows", this.availableRows);
       container.innerHTML = "";
 
-      const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
-      const sectionNameContainer = this.#createHTMLElement("div", "bg-info, uppercase, fs6, color-info-lightest, box-shadow-black-10, border, border-info-light, inline-block, rounded-max, px2, line-height-4", this.sectionName);
-      sectionNameWrapper.appendChild(sectionNameContainer);
-      container.appendChild(sectionNameWrapper);
+      if (this.sectionName) {
+        const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
+        const sectionNameContainer = this.#createHTMLElement("div", "bg-info, uppercase, fs6, color-info-lightest, box-shadow-black-10, border, border-info-light, inline-block, rounded-max, px2, line-height-4", this.sectionName);
+        sectionNameWrapper.appendChild(sectionNameContainer);
+        container.appendChild(sectionNameWrapper);
+      }
 
       [
         ...this.corridor,
@@ -506,7 +509,7 @@ class SeatmapSection {
     const seat = elem.label ? `${labels.seat}: ${elem.label} \n` : "";
     const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel} \n` : "";
     const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)} \n`;
-    const section = `${labels.section}: ${sectionName} \n`;
+    const section = sectionName ? `${labels.section}: ${sectionName} \n` : "";
 
     const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
     const seatClassName = seatClass && seatClass.value ? `${labels.seatClass}: ${seatClass.value} \n` : "";

@@ -126,7 +126,7 @@ describe("Seatmap section", function () {
       sectionCoachBus.draw();
       expect(document.querySelectorAll("#grid [data-type='seat'][data-index='1'][data-status='available']")[0].title).to.eql("Section: Main \nRow: 1 \nSeat: 1 \nStatus: Available \n");
       new SeatmapSection("grid", {}, {labels: {section: "Section", row: "Rangée", seat: "Siège", status: "Statut"}}).draw();
-      expect(document.querySelectorAll("#grid [data-type='seat'][data-index='1'][data-status='available']")[0].title).to.eql("Section: Main section \nRangée: 1 \nSiège: 1 \nStatut: Available \n");
+      expect(document.querySelectorAll("#grid [data-type='seat'][data-index='1'][data-status='available']")[0].title).to.eql("Rangée: 1 \nSiège: 1 \nStatut: Available \n");
     });
 
     it("Should draw the seatmap properly.", () => {
