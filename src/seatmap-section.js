@@ -1,5 +1,5 @@
 // 👇️ named export
-//const SeatmapEvents = require("./seatmap-events.js");
+const SeatmapEvents = require("./seatmap-events.js");
 class SeatmapSection {
   static get CLASSES () {
     return {
@@ -105,6 +105,14 @@ class SeatmapSection {
     this.labels = settings.labels || SeatmapSection.LABELS;
     this.seatClasses = settings.seatClasses || [];
     this.fees = settings.fees || [];
+
+    try {
+      this.socketEvents = new SeatmapEvents({});
+    } catch(err) {
+      console.log(err);
+      this.socketEvents = [];
+    }
+    
 
     this.#setSeatmap();
   }
