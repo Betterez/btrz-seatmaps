@@ -1198,6 +1198,7 @@ class SeatmapEvents{
         this.accessTicket = settings.accessTicket;
         this.legFrom = settings.legFrom;
         this.legTo = settings.legTo;
+        this.ttlSec = settings.ttlSec;
 
         const socket = new Phoenix.Socket(this.socketUrl, {
                 params: {
@@ -1245,7 +1246,21 @@ class SeatmapEvents{
 //                Seatmap.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
             });
 
-        });        
+        });
+    }
+
+    selectSeat(selector) {
+        if (this.channel) {
+            var payload = {
+                seat: {
+                leg_from: this.legFrom,
+                leg_to: this.legTo,
+                seat_id: selector
+                },
+                ttl_sec: this.ttlSec
+            };
+        this.channel.push("seat:selected", payload);
+        }
     }
 }
 
@@ -1340,10 +1355,10 @@ class SeatmapSection {
     this.customSeats = section.customSeats || [];
     this.enumType = section.enumType || SeatmapSection.ENUMERATION_TYPES.Sequencial;
     this.enumDir = section.enumDir || SeatmapSection.ENUMERATION_TYPES.Left,
-    this.startingSeatLabel = section.startingSeatLabel || 1,
     this.rowLabelType = section.rowLabelType || SeatmapSection.LABEL_TYPES.Number;
     this.seatLabelType = section.seatLabelType || SeatmapSection.LABEL_TYPES.Number;
-    this.startingRowLabel = section.startingRowLabel || 1;
+    this.startingSeatLabel = section.startingSeatLabel || (this.seatLabelType === SeatmapSection.LABEL_TYPES.Number ? 1 : "A"),
+    this.startingRowLabel = section.startingRowLabel || (this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ? 1 : "A");
     this.showRowLabels = section.showRowLabels;
     this.lastRowNoGap = section.lastRowNoGap;
     this.sectionName = section.name || "";
@@ -1357,7 +1372,15 @@ class SeatmapSection {
 
     try {
       if (settings.socketEvents) {
-        new SeatmapEvents(settings.socketEvents);
+        const seatmapEvents = new SeatmapEvents(settings.socketEvents);
+        this.events = [{
+          elementType: "seat",
+          elementStatus: ["available"],
+          type: "click",
+          cb: function (evt, e, elem) {
+              seatmapEvents.selectSeat(elem);
+          }
+        }]
       }
     } catch(err) {
       console.log(err);
