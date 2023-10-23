@@ -1219,6 +1219,7 @@ class SeatmapEvents{
             const selectedSeat = seat.selected_seat.seat_id;
             const notificationMessage = `Seat selected: ${selectedSeat.label}: Row ${selectedSeat.row} Col
                                     ${selectedSeat.col}`;
+            betterez.alerts.addAlert({text: notificationMessage, type: "success", stay: true});
 
 //            Seatmap.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
 //            Seatmap.addPill(notificationMessage, {row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
@@ -1377,7 +1378,7 @@ class SeatmapSection {
           elementType: "seat",
           elementStatus: ["available"],
           type: "click",
-          cb: function (evt, e, elem) {
+          cb: function (evt, e, elem, seatmapEvents) {
               seatmapEvents.selectSeat(elem);
           }
         }]
