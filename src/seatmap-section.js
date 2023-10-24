@@ -1220,8 +1220,8 @@ class SeatmapEvents{
             const notificationMessage = `Seat selected: ${selectedSeat.label}: Row ${selectedSeat.row} Col
                                     ${selectedSeat.col}`;
             betterez.alerts.addAlert({text: notificationMessage, type: "success", stay: true});
-
-//            Seatmap.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
+            
+            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
 //            Seatmap.addPill(notificationMessage, {row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
         });
 
@@ -1229,13 +1229,13 @@ class SeatmapEvents{
         this.channel.on("seat:unselected", function (seat) {
             const unselectedSeat = seat.selected_seat.seat_id;
             console.log("seat:new-design:unselected: ", unselectedSeat);
-//            Seatmap.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
+            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
       });
 
         this.channel.on("sync:join", function (msg) {
             msg.seats.forEach(function (seat) {
                 const selectedSeat = seat.seat_id;
-//                Seatmap.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
+                SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
             });
         });
 
@@ -1244,13 +1244,13 @@ class SeatmapEvents{
             msg.expired.forEach(function (expired) {
                 const notificationMessage = `Seat ${expired.seat_id.label} expired: Row ${expired.seat_id.row} Col ${expired.seat_id.col}`;
                 betterez.alerts.addAlert({text: notificationMessage, type: "warning", stay: true});
-//                Seatmap.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
+                SeatmapSection.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
             });
 
         });
     }
 
-    selectSeat(selector) {
+    pushSeatSelected(selector) {
         if (this.channel) {
             var payload = {
                 seat: {
@@ -1373,13 +1373,13 @@ class SeatmapSection {
 
     try {
       if (settings.socketEvents) {
-        const seatmapEvents = new SeatmapEvents(settings.socketEvents);
+        this.seatmapEvents = new SeatmapEvents(settings.socketEvents);
         this.events = [{
           elementType: "seat",
           elementStatus: ["available"],
           type: "click",
           cb: function (evt, e, elem, seatmapEvents) {
-              seatmapEvents.selectSeat(elem);
+              seatmapEvents.pushSeatSelected(elem);
           }
         }]
       }
@@ -1391,7 +1391,7 @@ class SeatmapSection {
     this.#setSeatmap();
   }
 
-  changeSeatStatus(elem, status) {
+  static changeSeatStatus(elem, status) {
     const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + elem.height} / ${elem.col + elem.width};']`;
     const element = document.querySelector(selector);
     element.dataset.status = status;
@@ -1459,7 +1459,7 @@ class SeatmapSection {
 
           if (appliesEvent) {
             e.addEventListener(evt.type || "click", (target) => {
-              evt.cb(target, e, elem);
+              evt.cb(target, e, elem, this.seatmapEvents);
             });
           }
         });
