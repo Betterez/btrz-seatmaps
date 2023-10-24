@@ -1260,7 +1260,7 @@ class SeatmapEvents{
                 },
                 ttl_sec: this.ttlSec
             };
-        this.channel.push("seat:selected", payload);
+        this.channel.push(selector.status === "available" ? "seat:selected" : "seat:unselected", payload);
         }
     }
 }
