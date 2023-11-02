@@ -1199,6 +1199,7 @@ class SeatmapEvents{
         this.legFrom = settings.legFrom;
         this.legTo = settings.legTo;
         this.ttlSec = settings.ttlSec;
+        this.callbacks = settings.callbacks;
 
         const socket = new Phoenix.Socket(this.socketUrl, {
                 params: {
@@ -1209,44 +1210,43 @@ class SeatmapEvents{
         this.channel = socket.channel("seatmap:" + this.idForLiveSeatmap, { leg_from: this.legFrom, leg_to: this.legTo });
         this.channel.join()
             .receive("ok", function () {
-                console.log("from new code: ok!");
+                console.log("Join successful from new design!");
             })
             .receive("error", function (err) {
-                console.log("failed join", err.reason);
+                console.log("Failed join", err.reason);
             });
 
         this.channel.on("seat:selected", function (seat) {
             const selectedSeat = seat.selected_seat.seat_id;
-            const notificationMessage = `Seat selected: ${selectedSeat.label}: Row ${selectedSeat.row} Col
-                                    ${selectedSeat.col}`;
-            betterez.alerts.addAlert({text: notificationMessage, type: "success", stay: true});
-            
+            console.log("seat:new-design:selected => ", seat);
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
-//            Seatmap.addPill(notificationMessage, {row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
         });
 
 
         this.channel.on("seat:unselected", function (seat) {
             const unselectedSeat = seat.selected_seat.seat_id;
-            console.log("seat:new-design:unselected: ", unselectedSeat);
+            console.log("seat:new-design:unselected => ", seat);
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
       });
 
         this.channel.on("sync:join", function (msg) {
-            msg.seats.forEach(function (seat) {
-                const selectedSeat = seat.seat_id;
-                SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
-            });
+          console.log("seat:new-design:sync:join:seats => ", msg);        
+          msg.seats.forEach(function (seat) {
+            const selectedSeat = seat.seat_id;
+            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
+          });
         });
 
         this.channel.on("sync:seats", function (msg) {
-            console.log("seat:new-design:expires:", msg, msg.expired);
-            msg.expired.forEach(function (expired) {
-                const notificationMessage = `Seat ${expired.seat_id.label} expired: Row ${expired.seat_id.row} Col ${expired.seat_id.col}`;
-                betterez.alerts.addAlert({text: notificationMessage, type: "warning", stay: true});
-                SeatmapSection.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
-            });
-
+          console.log("seat:new-design:sync:seats:expires =>", msg);
+          SeatmapEvents.seatExpired(msg.expired.map((seat) => { return {
+            seat_id: `${seat.seat_id.row}-${seat.seat_id.col}-${seat.seat_id.label}`,
+            row: seat.seat_id.row , col: seat.seat_id.col, height: 1, width: 1
+          } }) , {scheduleId: SeatmapEvents.scheduleId});
+          //msg.expired.forEach(function (expired) {
+            //SeatmapSection.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
+          //  SeatmapEvents.seatExpired({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1},{scheduleId: SeatmapEvents.scheduleId});
+          //});
         });
     }
 
@@ -1374,12 +1374,19 @@ class SeatmapSection {
     try {
       if (settings.socketEvents) {
         this.seatmapEvents = new SeatmapEvents(settings.socketEvents);
+        SeatmapEvents.seatExpired = settings.socketEvents.callbacks.seatExpired;
+        SeatmapEvents.scheduleId = settings.socketEvents.scheduleId;
         this.events = [{
           elementType: "seat",
+          //elementStatus: ["available", "selected"],
           elementStatus: ["available"],
           type: "click",
           cb: function (evt, e, elem, seatmapEvents) {
+            //FIX WHEN NO SOCKET UP
+            //seatmapEvents.pushSeatSelected(elem);
+            if (seatmapEvents.callbacks.seatSelected(elem, {scheduleId: settings.socketEvents.scheduleId})) {
               seatmapEvents.pushSeatSelected(elem);
+            };
           }
         }]
       }
@@ -1391,10 +1398,21 @@ class SeatmapSection {
     this.#setSeatmap();
   }
 
-  static changeSeatStatus(elem, status) {
-    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + elem.height} / ${elem.col + elem.width};']`;
+  static changeSeatStatus(elem,
+      status,
+      sectionName = "",
+      labels = SeatmapSection.LABELS,
+      seatClasses = [],
+      fees = []
+    ) {
+    
+    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
-    element.dataset.status = status;
+    if (element) {
+      elem.status = status
+      element.dataset.status = status;
+      element.title = SeatmapSection.getSeatTitle(elem, sectionName, labels, seatClasses, fees);
+    }
   }
 
   clearFocus() {
@@ -1439,7 +1457,7 @@ class SeatmapSection {
 
 
         if (elem.type === "seat") {
-          e.title = this.#getSeatTitle(elem, this.sectionName, this.labels);
+          e.title = SeatmapSection.getSeatTitle(elem, this.sectionName, this.labels, this.seatClasses, this.fees);
         }
 
         this.#setElementStyle(e.style, elem)
@@ -1787,15 +1805,15 @@ class SeatmapSection {
     return seatRowLabel;
   }
 
-  #getSeatTitle(elem, sectionName, labels) {
+  static getSeatTitle(elem, sectionName, labels, seatClasses, fees) {
     const seat = elem.label ? `${labels.seat}: ${elem.label} \n` : "";
     const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel} \n` : "";
     const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)} \n`;
     const section = sectionName ? `${labels.section}: ${sectionName} \n` : "";
 
-    const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
+    const seatClass = seatClasses.find((sc) => sc._id === elem.seatClass);
     const seatClassName = seatClass && seatClass.value ? `${labels.seatClass}: ${seatClass.value} \n` : "";
-    const fee = this.fees.find((fee) => fee._id === elem.fee);
+    const fee = fees.find((fee) => fee._id === elem.fee);
     const feeName = fee && fee.value ? `${labels.fee}: ${fee.value} \n` : "";
 
     const isAccessible = elem.accessible ? `${labels.accessible}` : "";
@@ -1989,6 +2007,9 @@ class SeatmapSection {
             this.#onJumpToNextSeat();
         }
     }
+
+    evt.stopPropagation();
+    evt.preventDefault();
   }
 
   #overlapsWithFixedElement(elements, row, col) {
