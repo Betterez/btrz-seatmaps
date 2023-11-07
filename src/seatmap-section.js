@@ -1219,21 +1219,21 @@ class SeatmapEvents{
         this.channel.on("seat:selected", function (seat) {
             const selectedSeat = seat.selected_seat.seat_id;
             console.log("seat:new-design:selected => ", seat);
-            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
+            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
         });
 
 
-        this.channel.on("seat:unselected", function (seat) {
-            const unselectedSeat = seat.selected_seat.seat_id;
-            console.log("seat:new-design:unselected => ", seat);
-            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "available");
+        this.channel.on("seat:unselected", function (payload) {
+            const unselectedSeat = payload.unselected_seat.seat;
+            console.log("seat:new-design:unselected => ", payload);
+            SeatmapSection.changeSeatStatus({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "available");
       });
 
         this.channel.on("sync:join", function (msg) {
           console.log("seat:new-design:sync:join:seats => ", msg);        
           msg.seats.forEach(function (seat) {
             const selectedSeat = seat.seat_id;
-            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "selected");
+            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
           });
         });
 
@@ -1250,6 +1250,22 @@ class SeatmapEvents{
         });
     }
 
+    pushSeatUnselected(selector) {
+        if (this.channel) {
+            var payload = {
+                seat: {
+                leg_from: this.legFrom,
+                leg_to: this.legTo,
+                seat: selector
+                },
+                ttl_sec: this.ttlSec
+            };
+            SeatmapSection.changeSeatDataProp({row: selector.row , col: selector.col, height: 1, width: 1}, "selected", "false");
+            this.channel.push("seat:unselected", payload);
+        }
+    }
+
+
     pushSeatSelected(selector) {
         if (this.channel) {
             var payload = {
@@ -1260,7 +1276,8 @@ class SeatmapEvents{
                 },
                 ttl_sec: this.ttlSec
             };
-        this.channel.push(selector.status === "available" ? "seat:selected" : "seat:unselected", payload);
+            SeatmapSection.changeSeatDataProp({row: selector.row , col: selector.col, height: 1, width: 1}, "selected", "true");
+            this.channel.push("seat:selected", payload);
         }
     }
 }
@@ -1346,6 +1363,7 @@ class SeatmapSection {
     section = {},
     settings = {}
   ) {
+    this.allowKeyNavStatusList = settings.allowKeyNavStatusList || ["available", "blocked", "reserved"];
     this.containerId = containerId;
     this.availableRows = parseInt(section.availableRows, 10) || 15;
     this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
@@ -1382,11 +1400,13 @@ class SeatmapSection {
           elementStatus: ["available"],
           type: "click",
           cb: function (evt, e, elem, seatmapEvents) {
-            //FIX WHEN NO SOCKET UP
-            //seatmapEvents.pushSeatSelected(elem);
-            if (seatmapEvents.callbacks.seatSelected(elem, {scheduleId: settings.socketEvents.scheduleId})) {
+            if (e.dataset.status === "available" &&
+                seatmapEvents.callbacks.seatSelected(elem, {scheduleId: settings.socketEvents.scheduleId})
+              ) {
               seatmapEvents.pushSeatSelected(elem);
-            };
+            } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
+              seatmapEvents.callbacks.seatUnselected(elem, {scheduleId: settings.socketEvents.scheduleId});
+            }
           }
         }]
       }
@@ -1396,6 +1416,18 @@ class SeatmapSection {
     
 
     this.#setSeatmap();
+  }
+
+  static changeSeatDataProp(elem,
+      prop,
+      value
+    ) {
+    
+    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
+    const element = document.querySelector(selector);
+    if (element) {
+      element.dataset[prop] = value;
+    }
   }
 
   static changeSeatStatus(elem,
@@ -1613,8 +1645,7 @@ class SeatmapSection {
                     return st.col === colNumber && st.row === rowNumber;
                 });
                 // eslint-disable-next-line no-unneeded-ternary
-                const allowKeyNav = ["selected", "available", "blocked", "reserved"]
-                    .includes(customSeat ? customSeat.status : "available") &&
+                const allowKeyNav = this.allowKeyNavStatusList.includes(customSeat ? customSeat.status : "available") &&
                     (!overlaps.length || overlapsItem) ? true : false;
 
                 const rowLabel = this.#getSeatRowLabel(rowNumber);
