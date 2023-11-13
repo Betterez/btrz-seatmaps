@@ -1220,6 +1220,7 @@ class SeatmapEvents{
             const selectedSeat = seat.selected_seat.seat_id;
             console.log("seat:new-design:selected => ", seat);
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
+            //SeatmapSection.changeSeatDataProp({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "keynav", "false");
         });
 
 
@@ -1227,6 +1228,7 @@ class SeatmapEvents{
             const unselectedSeat = payload.unselected_seat.seat;
             console.log("seat:new-design:unselected => ", payload);
             SeatmapSection.changeSeatStatus({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "available");
+            //SeatmapSection.changeSeatDataProp({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "keynav", "true");
       });
 
         this.channel.on("sync:join", function (msg) {
@@ -1234,6 +1236,7 @@ class SeatmapEvents{
           msg.seats.forEach(function (seat) {
             const selectedSeat = seat.seat_id;
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
+            //SeatmapSection.changeSeatDataProp({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "keynav", "false");
           });
         });
 
@@ -1401,11 +1404,11 @@ class SeatmapSection {
           type: "click",
           cb: function (evt, e, elem, seatmapEvents) {
             if (e.dataset.status === "available" &&
-                seatmapEvents.callbacks.seatSelected(elem, {scheduleId: settings.socketEvents.scheduleId})
+                seatmapEvents.callbacks.seatSelected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId})
               ) {
               seatmapEvents.pushSeatSelected(elem);
             } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
-              seatmapEvents.callbacks.seatUnselected(elem, {scheduleId: settings.socketEvents.scheduleId});
+              seatmapEvents.callbacks.seatUnselected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
             }
           }
         }]
@@ -1441,9 +1444,22 @@ class SeatmapSection {
     const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
     if (element) {
-      elem.status = status
+      const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
+      const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
+      element.title = element.title.replace(oldStatusText, newStatusText);
       element.dataset.status = status;
-      element.title = SeatmapSection.getSeatTitle(elem, sectionName, labels, seatClasses, fees);
+
+      if (element.dataset.selected) {
+        element.dataset.keynav = "true";
+      }
+      if (status === "blocked" && !element.dataset.selected) {
+        element.dataset.keynav = "false";
+      }
+      if (status === "available" || status === "unavailable") {
+        element.dataset.keynav = "false";
+      }      
+
+
     }
   }
 
@@ -1839,7 +1855,7 @@ class SeatmapSection {
   static getSeatTitle(elem, sectionName, labels, seatClasses, fees) {
     const seat = elem.label ? `${labels.seat}: ${elem.label} \n` : "";
     const row = elem.rowLabel ? `${labels.row}: ${elem.rowLabel} \n` : "";
-    const status = `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)} \n`;
+    const status = elem.status ? `${labels.status}: ${elem.status.charAt(0).toUpperCase()}${elem.status.slice(1)} \n` : "";
     const section = sectionName ? `${labels.section}: ${sectionName} \n` : "";
 
     const seatClass = seatClasses.find((sc) => sc._id === elem.seatClass);
@@ -1894,7 +1910,7 @@ class SeatmapSection {
 
   #setFocusOnSeat(index) {
       const focus = document.querySelector("[data-focus]");
-      const nextSeat = document.querySelector(`[data-keynav][data-index='${index}']`);
+      const nextSeat = document.querySelector(`[data-keynav='true'][data-index='${index}']`);
       if (nextSeat) {
           if (focus) {
             delete focus.dataset.focus;  
