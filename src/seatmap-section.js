@@ -1398,20 +1398,36 @@ class SeatmapSection {
         SeatmapEvents.seatExpired = settings.socketEvents.callbacks.seatExpired;
         SeatmapEvents.scheduleId = settings.socketEvents.scheduleId;
         this.events = [{
-          elementType: "seat",
-          //elementStatus: ["available", "selected"],
-          elementStatus: ["available"],
-          type: "click",
-          cb: function (evt, e, elem, seatmapEvents) {
-            if (e.dataset.status === "available" &&
-                seatmapEvents.callbacks.seatSelected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId})
-              ) {
-              seatmapEvents.pushSeatSelected(elem);
-            } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
-              seatmapEvents.callbacks.seatUnselected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
+            elementType: "seat",
+            elementStatus: ["available"],
+            type: "mouseover",
+            cb: function (evt, e, elem, seatmapEvents) {
+            seatmapEvents.callbacks.seatOver(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
             }
-          }
-        }]
+          },
+          {
+            elementType: "seat",
+            elementStatus: ["available"],
+            type: "mouseout",
+            cb: function (evt, e, elem, seatmapEvents) {
+            seatmapEvents.callbacks.seatOut(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
+            }
+          },
+          {
+            elementType: "seat",
+            //elementStatus: ["available", "selected"],
+            elementStatus: ["available"],
+            type: "click",
+            cb: function (evt, e, elem, seatmapEvents) {
+              if (e.dataset.status === "available" &&
+                  seatmapEvents.callbacks.seatSelected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId})
+                ) {
+                seatmapEvents.pushSeatSelected(elem);
+              } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
+                seatmapEvents.callbacks.seatUnselected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
+              }
+            }
+          }]
       }
     } catch(err) {
       console.log(err);
@@ -1861,7 +1877,7 @@ class SeatmapSection {
     const seatClass = seatClasses.find((sc) => sc._id === elem.seatClass);
     const seatClassName = seatClass && seatClass.value ? `${labels.seatClass}: ${seatClass.value} \n` : "";
     const fee = fees.find((fee) => fee._id === elem.fee);
-    const feeName = fee && fee.value ? `${labels.fee}: ${fee.value} \n` : "";
+    const feeName = fee && fee.name ? `${labels.fee}: ${fee.name} (+${fee.type === "$" ? "$" : ""}${fee.value}${fee.type === "%" ? "%" : ""}) \n` : "";
 
     const isAccessible = elem.accessible ? `${labels.accessible}` : "";
     const isFemale = elem.female ? `${labels.female}` : "";
