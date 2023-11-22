@@ -1190,99 +1190,73 @@ var Phoenix = (() => {
   return __toCommonJS(phoenix_exports);
 })();
 
-class SeatmapEvents{
-    constructor(settings) {
-        this.channel = {};
-        this.socketUrl = settings.socketUrl;
-        this.idForLiveSeatmap = settings.idForLiveSeatmap;
-        this.accessTicket = settings.accessTicket;
-        this.legFrom = settings.legFrom;
-        this.legTo = settings.legTo;
-        this.ttlSec = settings.ttlSec;
-        this.callbacks = settings.callbacks;
+class SeatmapSocket {
+  static channel = null;
+  static listen(settings) {
+      SeatmapSocket.settings = settings;
 
-        const socket = new Phoenix.Socket(this.socketUrl, {
-                params: {
-                    token: this.accessTicket
-                }
-            });
-        socket.connect();
-        this.channel = socket.channel("seatmap:" + this.idForLiveSeatmap, { leg_from: this.legFrom, leg_to: this.legTo });
-        this.channel.join()
-            .receive("ok", function () {
-                console.log("Join successful from new design!");
-            })
-            .receive("error", function (err) {
-                console.log("Failed join", err.reason);
-            });
+      const socket = new Phoenix.Socket(settings.socketUrl, {
+          params: {
+              token: settings.accessTicket
+          }
+      });
+      socket.connect();
+      if (SeatmapSocket.channel) {
+        SeatmapSocket.channel.leave();
+      }
+      
+      SeatmapSocket.channel = socket.channel(
+        `seatmap:${settings.idForLiveSeatmap}`,
+        {leg_from: settings.legFrom, leg_to: settings.legTo}
+      );
+      SeatmapSocket.channel.join()
+      .receive("ok", () => {
+        console.log(`Join successfully to ${SeatmapSocket.channel.topic}`);
 
-        this.channel.on("seat:selected", function (seat) {
-            const selectedSeat = seat.selected_seat.seat_id;
-            console.log("seat:new-design:selected => ", seat);
+        SeatmapSocket.channel.on("seat:selected", (payload) => {
+            const selectedSeat = payload.selected_seat.seat;
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
-            //SeatmapSection.changeSeatDataProp({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "keynav", "false");
         });
 
 
-        this.channel.on("seat:unselected", function (payload) {
+        SeatmapSocket.channel.on("seat:unselected", (payload) => {
             const unselectedSeat = payload.unselected_seat.seat;
-            console.log("seat:new-design:unselected => ", payload);
             SeatmapSection.changeSeatStatus({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "available");
-            //SeatmapSection.changeSeatDataProp({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "keynav", "true");
-      });
+        });
 
-        this.channel.on("sync:join", function (msg) {
-          console.log("seat:new-design:sync:join:seats => ", msg);        
-          msg.seats.forEach(function (seat) {
-            const selectedSeat = seat.seat_id;
+        SeatmapSocket.channel.on("sync:join", (payload) => {
+          payload.seats.forEach(function (data) {
+            const selectedSeat = data.seat;
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
-            //SeatmapSection.changeSeatDataProp({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "keynav", "false");
           });
         });
 
-        this.channel.on("sync:seats", function (msg) {
-          console.log("seat:new-design:sync:seats:expires =>", msg);
-          SeatmapEvents.seatExpired(msg.expired.map((seat) => { return {
-            seat_id: `${seat.seat_id.row}-${seat.seat_id.col}-${seat.seat_id.label}`,
-            row: seat.seat_id.row , col: seat.seat_id.col, height: 1, width: 1
-          } }) , {scheduleId: SeatmapEvents.scheduleId});
-          //msg.expired.forEach(function (expired) {
-            //SeatmapSection.changeSeatStatus({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1}, "available")
-          //  SeatmapEvents.seatExpired({row: expired.seat_id.row , col: expired.seat_id.col, height: 1, width: 1},{scheduleId: SeatmapEvents.scheduleId});
-          //});
-        });
-    }
+        SeatmapSocket.channel.on("sync:seats", (payload) => {
+          SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
+            seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
+            row: data.seat.row , col: data.seat.col, height: 1, width: 1
+          } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
+        });        
 
-    pushSeatUnselected(selector) {
-        if (this.channel) {
-            var payload = {
-                seat: {
-                leg_from: this.legFrom,
-                leg_to: this.legTo,
-                seat: selector
-                },
-                ttl_sec: this.ttlSec
-            };
-            SeatmapSection.changeSeatDataProp({row: selector.row , col: selector.col, height: 1, width: 1}, "selected", "false");
-            this.channel.push("seat:unselected", payload);
-        }
+      })
+      .receive("error", (err) => {
+          console.log(`Failed join: ${err}`);
+      });
+      
+  }
+  static pushEvent(name, seat) {
+    const payload = {
+        seat: {
+        leg_from: SeatmapSocket.settings.legFrom,
+        leg_to: SeatmapSocket.settings.legTo,
+        seat
+        },
+        ttl_sec: SeatmapSocket.settings.ttlSec
+    };    
+    if (SeatmapSocket.channel) {
+      SeatmapSocket.channel.push(name, payload);
     }
-
-
-    pushSeatSelected(selector) {
-        if (this.channel) {
-            var payload = {
-                seat: {
-                leg_from: this.legFrom,
-                leg_to: this.legTo,
-                seat_id: selector
-                },
-                ttl_sec: this.ttlSec
-            };
-            SeatmapSection.changeSeatDataProp({row: selector.row , col: selector.col, height: 1, width: 1}, "selected", "true");
-            this.channel.push("seat:selected", payload);
-        }
-    }
+  }
 }
 
 class SeatmapSection {
@@ -1392,49 +1366,60 @@ class SeatmapSection {
     this.seatClasses = settings.seatClasses || [];
     this.fees = settings.fees || [];
 
+    this.#setSeatmap();
+    this.#manageSocketEvents(settings.socketEvents)
+  }
+
+  #manageSocketEvents(socketEvents) {
     try {
-      if (settings.socketEvents) {
-        this.seatmapEvents = new SeatmapEvents(settings.socketEvents);
-        SeatmapEvents.seatExpired = settings.socketEvents.callbacks.seatExpired;
-        SeatmapEvents.scheduleId = settings.socketEvents.scheduleId;
-        this.events = [{
+      if (socketEvents) {
+        this.socketEvents = socketEvents;
+
+        SeatmapSocket.listen(socketEvents);
+        this.events = [
+          {
+              elementType: "seat",
+              elementStatus: ["available"],
+              type: "click",
+              cb: this.onSeatClicked.bind(this)
+          },
+          {
             elementType: "seat",
             elementStatus: ["available"],
             type: "mouseover",
-            cb: function (evt, e, elem, seatmapEvents) {
-            seatmapEvents.callbacks.seatOver(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
-            }
+            cb: this.onSeatMouseOver.bind(this)
           },
           {
             elementType: "seat",
             elementStatus: ["available"],
             type: "mouseout",
-            cb: function (evt, e, elem, seatmapEvents) {
-            seatmapEvents.callbacks.seatOut(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
-            }
-          },
-          {
-            elementType: "seat",
-            //elementStatus: ["available", "selected"],
-            elementStatus: ["available"],
-            type: "click",
-            cb: function (evt, e, elem, seatmapEvents) {
-              if (e.dataset.status === "available" &&
-                  seatmapEvents.callbacks.seatSelected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId})
-                ) {
-                seatmapEvents.pushSeatSelected(elem);
-              } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
-                seatmapEvents.callbacks.seatUnselected(elem, {tripId: settings.socketEvents.tripId, scheduleId: settings.socketEvents.scheduleId});
-              }
-            }
-          }]
+            cb: this.onSeatMouseOut.bind(this)
+          }
+        ];
       }
     } catch(err) {
       console.log(err);
     }
-    
+  }
 
-    this.#setSeatmap();
+  onSeatMouseOver(evt, e, elem) {
+    this.socketEvents.callbacks.seatOver(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+  }
+
+  onSeatMouseOut(evt, e, elem) {
+    this.socketEvents.callbacks.seatOut(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+  }  
+
+  onSeatClicked(evt, e, seat) {   
+    if (
+        e.dataset.status === "available" &&
+        this.socketEvents.callbacks.seatSelected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId})
+      ) {       
+          SeatmapSection.changeSeatDataProp({row: seat.row , col: seat.col}, "selected", "true");
+          SeatmapSocket.pushEvent("seat:selected", seat);
+    } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
+      this.socketEvents.callbacks.seatUnselected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    }    
   }
 
   static changeSeatDataProp(elem,
@@ -1449,13 +1434,7 @@ class SeatmapSection {
     }
   }
 
-  static changeSeatStatus(elem,
-      status,
-      sectionName = "",
-      labels = SeatmapSection.LABELS,
-      seatClasses = [],
-      fees = []
-    ) {
+  static changeSeatStatus(elem, status) {
     
     const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
@@ -1541,7 +1520,7 @@ class SeatmapSection {
 
           if (appliesEvent) {
             e.addEventListener(evt.type || "click", (target) => {
-              evt.cb(target, e, elem, this.seatmapEvents);
+              evt.cb(target, e, elem);
             });
           }
         });
@@ -1898,7 +1877,7 @@ class SeatmapSection {
       const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
       if (seatClass) {
         if (seatClass.bgcolor) {
-          style.backgroundColor = seatClass.bgcolor;
+          style.setProperty("--seatclasscolor", seatClass.bgcolor);
         }
         if (seatClass.color) {
           style.color = seatClass.color;
@@ -1912,7 +1891,7 @@ class SeatmapSection {
       const fee = this.fees.find((fee) => fee._id === elem.fee);
       if (fee) {
         if (fee.bgcolor) {
-          style.backgroundColor = fee.bgcolor;
+          style.setProperty("--seatfeecolor", fee.bgcolor);
         }
         if (fee.color) {
           style.color = fee.color;
