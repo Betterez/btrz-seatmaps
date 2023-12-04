@@ -1214,24 +1214,29 @@ class SeatmapSocket {
         console.log(`Join successfully to ${SeatmapSocket.channel.topic}`);
 
         SeatmapSocket.channel.on("seat:selected", (payload) => {
-            const selectedSeat = payload.selected_seat.seat;
+            const selectedSeat = payload.selected_seat.seat || payload.selected_seat.seat_id;
+            console.log("seat:selected", payload, selectedSeat.row, selectedSeat.col);
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
         });
 
 
         SeatmapSocket.channel.on("seat:unselected", (payload) => {
             const unselectedSeat = payload.unselected_seat.seat;
+            console.log("seat:unselected", payload, unselectedSeat.row, unselectedSeat.col);
             SeatmapSection.changeSeatStatus({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "available");
         });
 
         SeatmapSocket.channel.on("sync:join", (payload) => {
+          console.log("sync:join", payload);
           payload.seats.forEach(function (data) {
-            const selectedSeat = data.seat;
+            const selectedSeat = data.seat || data.seat_id;
+            console.log("sync:join", selectedSeat.row, selectedSeat.col);
             SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
           });
         });
 
         SeatmapSocket.channel.on("sync:seats", (payload) => {
+          console.log("sync:seats", payload);
           SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
             seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
             row: data.seat.row , col: data.seat.col, height: 1, width: 1
@@ -1427,7 +1432,7 @@ class SeatmapSection {
       value
     ) {
     
-    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
+    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
     if (element) {
       element.dataset[prop] = value;
@@ -1436,7 +1441,7 @@ class SeatmapSection {
 
   static changeSeatStatus(elem, status) {
     
-    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${elem.row + (elem.height || 1)} / ${elem.col + (elem.width || 1)};']`;
+    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
     if (element) {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
@@ -2009,49 +2014,60 @@ class SeatmapSection {
 
   #manageKeyboardNavigation(evt) {
     if (evt.keyCode === 13) {
-        this.#onSelectSeat(evt);
+      this.#onSelectSeat(evt);
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // Home
     if (evt.keyCode === 36) {
-        this.#onJumpToFirstSeat();
+      this.#onJumpToFirstSeat();
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // End
     if (evt.keyCode === 35) {
-        this.#onJumpToFinalSeat();
+      this.#onJumpToFinalSeat();
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // Arrow down
     if (evt.keyCode === 40) {
-        this.#onJumpToNextSeatNextRow();
+      this.#onJumpToNextSeatNextRow();
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // Arrow right
     if (evt.keyCode === 39) {
-        if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
-            this.#onJumpToNextSeat();
-        } else {
-            this.#onJumpToPrevSeat();
-        }
+      if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
+          this.#onJumpToNextSeat();
+      } else {
+          this.#onJumpToPrevSeat();
+      }
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // Arrow up
     if (evt.keyCode === 38) {
-        this.#onJumpToPrevSeatPrevRow();
+      this.#onJumpToPrevSeatPrevRow();
+      evt.stopPropagation();
+      evt.preventDefault();
     }
 
     // Arrow left
     if (evt.keyCode === 37) {
-        if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
-            this.#onJumpToPrevSeat();
-        } else {
-            this.#onJumpToNextSeat();
-        }
+      if (this.enumDir === SeatmapSection.ENUMERATION_DIRECTION.Left) {
+          this.#onJumpToPrevSeat();
+      } else {
+          this.#onJumpToNextSeat();
+      }
+      evt.stopPropagation();
+      evt.preventDefault();
     }
-
-    evt.stopPropagation();
-    evt.preventDefault();
   }
 
   #overlapsWithFixedElement(elements, row, col) {
