@@ -2015,8 +2015,6 @@ class SeatmapSection {
   #manageKeyboardNavigation(evt) {
     if (evt.keyCode === 13) {
       this.#onSelectSeat(evt);
-      evt.stopPropagation();
-      evt.preventDefault();
     }
 
     // Home
