@@ -2013,6 +2013,7 @@ class SeatmapSection {
   }  
 
   #manageKeyboardNavigation(evt) {
+    //Enter
     if (evt.keyCode === 13) {
       this.#onSelectSeat(evt);
     }
