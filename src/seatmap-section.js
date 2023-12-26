@@ -1553,6 +1553,21 @@ class SeatmapSection {
     document.querySelector(`[data-index='${elem.index}']`).dataset.focus = true;
   }
 
+  focusOnNextSelected() {
+    const firstSeatSelected = document.querySelector(`[data-keynav='true'][data-selected=true]`);
+    const index = firstSeatSelected ? firstSeatSelected.dataset.index : 1;
+    const container = document.getElementById(this.containerId);
+    if (container) {
+      container.focus();
+    }
+
+    for (let i = index; i < this.seats.length + 1; i++) {
+      if (this.#setFocusOnSeat(i, true)) {
+        break;
+      }
+    }
+  }
+
   getCapacity() {
     return (this.seats || []).filter((s) => !s.overlapped && s.allowKeyNav && s.status !== "blocked").length;;
   }
@@ -1908,9 +1923,12 @@ class SeatmapSection {
     }
   }
 
-  #setFocusOnSeat(index) {
+  #setFocusOnSeat(index, excludeSelected = false) {
       const focus = document.querySelector("[data-focus]");
-      const nextSeat = document.querySelector(`[data-keynav='true'][data-index='${index}']`);
+      const selector = excludeSelected ?
+        `[data-keynav='true'][data-index='${index}']:not([data-selected=true])` :
+        `[data-keynav='true'][data-index='${index}']`;
+      const nextSeat = document.querySelector(selector);
       if (nextSeat) {
           if (focus) {
             delete focus.dataset.focus;  
