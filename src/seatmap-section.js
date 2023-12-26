@@ -2032,7 +2032,7 @@ class SeatmapSection {
 
   #manageKeyboardNavigation(evt) {
     //Enter
-    if (evt.keyCode === 13) {
+    if (evt.keyCode === 13 && evt.altKey === false) {
       this.#onSelectSeat(evt);
     }
 
