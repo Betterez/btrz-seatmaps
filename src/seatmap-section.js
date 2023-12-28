@@ -1562,7 +1562,7 @@ class SeatmapSection {
     }
 
     for (let i = index; i < this.seats.length + 1; i++) {
-      if (this.#setFocusOnSeat(i, true)) {
+      if (this.#setFocusOnSeat(i, "[data-status='available']:not([data-selected=true])")) {
         break;
       }
     }
@@ -1923,11 +1923,9 @@ class SeatmapSection {
     }
   }
 
-  #setFocusOnSeat(index, excludeSelected = false) {
+  #setFocusOnSeat(index, extraSelector = "") {
       const focus = document.querySelector("[data-focus]");
-      const selector = excludeSelected ?
-        `[data-keynav='true'][data-index='${index}']:not([data-selected=true])` :
-        `[data-keynav='true'][data-index='${index}']`;
+      const selector = `[data-keynav='true'][data-index='${index}']${extraSelector}`;
       const nextSeat = document.querySelector(selector);
       if (nextSeat) {
           if (focus) {
