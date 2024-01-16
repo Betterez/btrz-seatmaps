@@ -1250,15 +1250,15 @@ class SeatmapSocket {
       
   }
   static pushEvent(name, seat) {
-    const payload = {
-        seat: {
-        leg_from: SeatmapSocket.settings.legFrom,
-        leg_to: SeatmapSocket.settings.legTo,
-        seat
-        },
-        ttl_sec: SeatmapSocket.settings.ttlSec
-    };    
     if (SeatmapSocket.channel) {
+        const payload = {
+          seat: {
+          leg_from: SeatmapSocket.settings.legFrom,
+          leg_to: SeatmapSocket.settings.legTo,
+          seat
+          },
+          ttl_sec: SeatmapSocket.settings.ttlSec
+      };
       SeatmapSocket.channel.push(name, payload);
     }
   }
@@ -1408,23 +1408,22 @@ class SeatmapSection {
   }
 
   onSeatMouseOver(evt, e, elem) {
-    this.socketEvents.callbacks.seatOver(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    if (this.socketEvents.callbacks.seatOver) {
+      this.socketEvents.callbacks.seatOver(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    }
   }
 
   onSeatMouseOut(evt, e, elem) {
-    this.socketEvents.callbacks.seatOut(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    if (this.socketEvents.callbacks.seatOut) {
+      this.socketEvents.callbacks.seatOut(elem, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    }
   }  
 
-  onSeatClicked(evt, e, seat) {   
-    if (
-        e.dataset.status === "available" &&
-        this.socketEvents.callbacks.seatSelected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId})
-      ) {       
-          SeatmapSection.changeSeatDataProp({row: seat.row , col: seat.col}, "selected", "true");
-          SeatmapSocket.pushEvent("seat:selected", seat);
-    } else if (e.dataset.status === "blocked" && e.dataset.selected === "true") {
-      this.socketEvents.callbacks.seatUnselected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
-    }    
+  onSeatClicked(evt, e, seat) {
+    if (e.dataset.status === "blocked" && (!e.dataset.selected || e.dataset.selected === "false")) {
+      return;
+    }
+    this.socketEvents.callbacks.seatSelected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
   }
 
   static changeSeatDataProp(elem,
