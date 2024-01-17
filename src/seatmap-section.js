@@ -1239,7 +1239,12 @@ class SeatmapSocket {
           console.log("sync:seats", payload);
           SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
             seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
-            row: data.seat.row , col: data.seat.col, height: 1, width: 1
+            row: data.seat.row ,
+            col: data.seat.col,
+            height: 1,
+            width: 1,
+            sectionId: this.sectionId,
+            sectionName: this.sectionName
           } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
         });        
 
@@ -1249,13 +1254,14 @@ class SeatmapSocket {
       });
       
   }
-  static pushEvent(name, seat) {
+  static pushEvent(name, seat, section) {
     if (SeatmapSocket.channel) {
         const payload = {
           seat: {
           leg_from: SeatmapSocket.settings.legFrom,
           leg_to: SeatmapSocket.settings.legTo,
-          seat
+          seat,
+          //sectionId: section._id
           },
           ttl_sec: SeatmapSocket.settings.ttlSec
       };
@@ -1363,6 +1369,7 @@ class SeatmapSection {
     this.showRowLabels = section.showRowLabels;
     this.lastRowNoGap = section.lastRowNoGap;
     this.sectionName = section.name || "";
+    this.sectionId = section._id || "";
     this.capacity = section.capacity || 60;
     this.rowLabelRange = section.rowLabelRange;
     this.events = settings.events || [];
@@ -1423,7 +1430,13 @@ class SeatmapSection {
     if (e.dataset.status === "blocked" && (!e.dataset.selected || e.dataset.selected === "false")) {
       return;
     }
-    this.socketEvents.callbacks.seatSelected(seat, {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    this.socketEvents.callbacks.seatClicked(Object.assign(
+      seat,
+      {
+        sectionName: this.sectionName,
+        sectionId: this.sectionId
+      }),
+      {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
   }
 
   static changeSeatDataProp(elem,
