@@ -1214,25 +1214,26 @@ class SeatmapSocket {
         console.log(`Join successfully to ${SeatmapSocket.channel.topic}`);
 
         SeatmapSocket.channel.on("seat:selected", (payload) => {
-            const selectedSeat = payload.selected_seat.seat || payload.selected_seat.seat_id;
-            console.log("seat:selected", payload, selectedSeat.row, selectedSeat.col);
-            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
+          console.log("seat:selected", payload);
+          const selectedSeat = payload.selected_seat.seat || payload.selected_seat.seat_id;
+          if (SeatmapSocket.settings.callbacks.seatmapSeatSelected && selectedSeat) {
+            SeatmapSocket.settings.callbacks.seatmapSeatSelected(selectedSeat);
+          }
         });
 
-
         SeatmapSocket.channel.on("seat:unselected", (payload) => {
-            const unselectedSeat = payload.unselected_seat.seat;
-            console.log("seat:unselected", payload, unselectedSeat.row, unselectedSeat.col);
-            SeatmapSection.changeSeatStatus({row: unselectedSeat.row , col: unselectedSeat.col, height: 1, width: 1}, "available");
+          console.log("seat:unselected", payload);
+          const unselectedSeat = payload.unselected_seat.seat;
+          if (SeatmapSocket.settings.callbacks.seatmapSeatUnSelected && unselectedSeat) {
+            SeatmapSocket.settings.callbacks.seatmapSeatUnSelected(unselectedSeat);
+          }
         });
 
         SeatmapSocket.channel.on("sync:join", (payload) => {
           console.log("sync:join", payload);
-          payload.seats.forEach(function (data) {
-            const selectedSeat = data.seat || data.seat_id;
-            console.log("sync:join", selectedSeat.row, selectedSeat.col);
-            SeatmapSection.changeSeatStatus({row: selectedSeat.row , col: selectedSeat.col, height: 1, width: 1}, "blocked");
-          });
+          if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
+            SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
+          }
         });
 
         SeatmapSocket.channel.on("sync:seats", (payload) => {
@@ -1243,8 +1244,8 @@ class SeatmapSocket {
             col: data.seat.col,
             height: 1,
             width: 1,
-            sectionId: this.sectionId,
-            sectionName: this.sectionName
+            sectionId: data.seat.sectionId,
+            sectionName: data.seat.sectionName
           } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
         });        
 
