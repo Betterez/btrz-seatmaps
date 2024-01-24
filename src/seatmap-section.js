@@ -1566,9 +1566,11 @@ class SeatmapSection {
     document.querySelector(`[data-index='${elem.index}']`).dataset.focus = true;
   }
 
-  focusOnNextSelected() {
-    const firstSeatSelected = document.querySelector(`[data-keynav='true'][data-selected=true]`);
-    const index = firstSeatSelected ? firstSeatSelected.dataset.index : 1;
+  focusOnNextSelected(seat) {
+    const seatSelected = seat ?
+      document.querySelector(`[data-keynav='true'][data-selected=true][data-index='${seat.index}']`) :
+      document.querySelector(`[data-keynav='true'][data-selected=true]`);
+    const index = seatSelected ? seatSelected.dataset.index : 1;
     const container = document.getElementById(this.containerId);
     if (container) {
       container.focus();
