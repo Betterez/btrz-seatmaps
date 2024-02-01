@@ -1440,12 +1440,9 @@ class SeatmapSection {
       {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
   }
 
-  static changeSeatDataProp(elem,
-      prop,
-      value
-    ) {
-    
-    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
+  static changeSeatDataProp(elem, prop, value) {
+    const sectionSelector = elem.sectionId ? `[data-section="${elem.sectionId}"]` : ``;
+    const selector = `${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
     if (element) {
       element.dataset[prop] = value;
@@ -1453,8 +1450,8 @@ class SeatmapSection {
   }
 
   static changeSeatStatus(elem, status) {
-    
-    const selector = `[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
+    const sectionSelector = elem.sectionId ? `[data-section="${elem.sectionId}"]` : ``;
+    const selector = `${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
     if (element) {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
@@ -1698,6 +1695,7 @@ class SeatmapSection {
                 const label = customSeat ? customSeat.label : "";
                 const status = customSeat ? customSeat.status : "available";
                 const seat = {
+                  sectionId: this.sectionId,
                   type: "seat",
                   classes: this.classes.seat,
                   row: rowNumber,
@@ -1827,6 +1825,9 @@ class SeatmapSection {
   #getSeatDataset(elem) {
     const dataset = {};
     dataset.type = elem.type;
+    if (elem.sectionId) {
+      dataset.section = elem.sectionId;
+    }
     if (elem.rowLabel) {
       dataset.rowLabel = elem.rowLabel;
     }
