@@ -1566,7 +1566,7 @@ class SeatmapSection {
   focusOnNextSelected(seat) {
     const seatSelected = seat ?
       document.querySelector(`[data-keynav='true'][data-selected=true][data-index='${seat.index}']`) :
-      document.querySelector(`[data-keynav='true'][data-selected=true]`);
+      document.querySelector(`[data-keynav='true'][data-selected=true]`) || document.querySelector(`[data-keynav='true'][data-suggested=true]`);
     const index = seatSelected ? seatSelected.dataset.index : 1;
     const container = document.getElementById(this.containerId);
     if (container) {
