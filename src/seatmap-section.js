@@ -1903,40 +1903,43 @@ class SeatmapSection {
 
   #setElementStyle(style, elem) {
     style["grid-area"] = `${elem.row}/${elem.col}/${elem.row + elem.height}/${elem.col + elem.width}`;
-    if (elem.bgcolor) {
-      style.backgroundColor = elem.bgcolor;
-    }
-    if (elem.color) {
-      style.color = elem.color;
-    }
+
+    let bgColor = elem.bgcolor;
     if (elem.seatClass && this.seatClasses) {
       const seatClass = this.seatClasses.find((sc) => sc._id === elem.seatClass);
       if (seatClass) {
-        if (seatClass.bgcolor) {
-          style.setProperty("--seatclasscolor", seatClass.bgcolor);
-        }
-        if (seatClass.color) {
-          style.color = seatClass.color;
-        }
-        if (seatClass.bordercolor) {
-          style["border-color"] = seatClass.bordercolor;
-        }
+        bgColor = seatClass.bgcolor;
       }
     }
     if (elem.fee && this.fees) {
       const fee = this.fees.find((fee) => fee._id === elem.fee);
       if (fee) {
-        if (fee.bgcolor) {
-          style.setProperty("--seatfeecolor", fee.bgcolor);
-        }
-        if (fee.color) {
-          style.color = fee.color;
-        }
-        if (fee.bordercolor) {
-          style["border-color"] = fee.bordercolor;
-        }
+        bgColor = fee.bgcolor;
       }
     }
+
+    if (bgColor) {
+      style.setProperty("--bgcolor", bgColor);
+      style.setProperty("--color", this.#getContrastYIQ(bgColor));
+    }
+  }
+
+  #getContrastYIQ(hexcolor) {
+    var darkColor = "#000000";
+    var lightColor = "#FFFFFF";
+    var color = (hexcolor.charAt(0) === '#') ? hexcolor.substring(1, 7) : hexcolor;
+    var r = parseInt(color.substring(0, 2), 16); // hexToR
+    var g = parseInt(color.substring(2, 4), 16); // hexToG
+    var b = parseInt(color.substring(4, 6), 16); // hexToB
+    var uicolors = [r / 255, g / 255, b / 255];
+    var c = uicolors.map((col) => {
+      if (col <= 0.03928) {
+        return col / 12.92;
+      }
+      return Math.pow((col + 0.055) / 1.055, 2.4);
+    });
+    var L = (0.2126 * c[0]) + (0.7152 * c[1]) + (0.0722 * c[2]);
+    return (L > 0.179) ? darkColor : lightColor;
   }
 
   #setFocusOnSeat(index, extraSelector = "") {
