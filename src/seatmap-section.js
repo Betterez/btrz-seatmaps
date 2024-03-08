@@ -1255,14 +1255,14 @@ class SeatmapSocket {
       });
       
   }
-  static pushEvent(name, seat, section) {
+  static pushEvent(name, seat, seatId) {
     if (SeatmapSocket.channel) {
         const payload = {
           seat: {
           leg_from: SeatmapSocket.settings.legFrom,
           leg_to: SeatmapSocket.settings.legTo,
           seat,
-          //sectionId: section._id
+          seat_id: seatId
           },
           ttl_sec: SeatmapSocket.settings.ttlSec
       };
