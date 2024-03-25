@@ -1239,13 +1239,13 @@ class SeatmapSocket {
         SeatmapSocket.channel.on("sync:seats", (payload) => {
           console.log("sync:seats", payload);
           SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
-            seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
+            //seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
             row: data.seat.row ,
             col: data.seat.col,
-            height: 1,
-            width: 1,
+            //height: 1,
+            //width: 1,
             sectionId: data.seat.sectionId,
-            sectionName: data.seat.sectionName
+            //sectionName: data.seat.sectionName
           } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
         });        
 
@@ -1474,7 +1474,7 @@ class SeatmapSection {
   }
 
   clearFocus() {
-    const focus = document.querySelector("[data-focus]");
+    const focus = document.querySelector(`[data-focus][data-section="${this.sectionId}"]`);
     if (focus) {
         delete focus.dataset.focus;
     }    
@@ -1492,6 +1492,7 @@ class SeatmapSection {
 
       container.style.setProperty("--columns", this.availableCols);
       container.style.setProperty("--rows", this.availableRows);
+      container.style["background-color"] = "#F9F9F9";
       container.innerHTML = "";
 
       if (this.sectionName) {
@@ -1552,7 +1553,7 @@ class SeatmapSection {
     }
     
     for (let i = 1; i < this.seats.length + 1; i++) {
-        if (this.#setFocusOnSeat(i)) {
+        if (this.#setFocusOnSeat(i, `[data-section="${this.sectionId}"]`)) {
             break;
         }
     }
@@ -1962,7 +1963,8 @@ class SeatmapSection {
 
     if (focus) {
         const index = parseInt(focus.dataset.index, 10);
-        const nextSeat = document.querySelector(`[data-keynav][data-index='${index}']`);
+        const section = focus.dataset.section;
+        const nextSeat = document.querySelector(`[data-keynav][data-index='${index}'][data-section='${section}']`);
         if (nextSeat) {
             nextSeat.click();
         }
@@ -1973,8 +1975,9 @@ class SeatmapSection {
       const focus = document.querySelector("[data-focus]");
 
       if (focus) {
+          const section = focus.dataset.section;
           for (let i = 1; i < this.seats.length + 1; i++) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
@@ -1984,8 +1987,9 @@ class SeatmapSection {
   #onJumpToFinalSeat() {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
+          const section = focus.dataset.section;
           for (let i = this.seats.length; i > 0; i--) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
@@ -1996,10 +2000,11 @@ class SeatmapSection {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
           const index = parseInt(focus.dataset.index, 10);
+          const section = focus.dataset.section;
           for (let i = (index + this.seatsPerRowLeft + this.seatsPerRowRight);
               i < this.seats.length + 1;
               i += this.seatsPerRowLeft + this.seatsPerRowRight) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
@@ -2009,9 +2014,10 @@ class SeatmapSection {
   #onJumpToNextSeat() {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
+          const section = focus.dataset.section;
           const index = parseInt(focus.dataset.index, 10);
           for (let i = (index + 1); i < this.seats.length + 1; i++) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
@@ -2023,12 +2029,12 @@ class SeatmapSection {
       if (focus) {
           const index = parseInt(focus.dataset.index, 10);
           const exception = this.lastRowNoGap && (index > this.seats.length - this.seatsPerRowRight);
-
+          const section = focus.dataset.section;
           // eslint-disable-next-line max-len
           for (let i = (index - this.seatsPerRowLeft - this.seatsPerRowRight - (exception ? 1 : 0));
               i > 0;
               i -= this.seatsPerRowLeft + this.seatsPerRowRight) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
@@ -2039,8 +2045,9 @@ class SeatmapSection {
       const focus = document.querySelector("[data-focus]");
       if (focus) {
           const index = parseInt(focus.dataset.index, 10);
+          const section = focus.dataset.section;
           for (let i = (index - 1); i > 0; i--) {
-              if (this.#setFocusOnSeat(i)) {
+              if (this.#setFocusOnSeat(i, `[data-section='${section}']`)) {
                   break;
               }
           }
