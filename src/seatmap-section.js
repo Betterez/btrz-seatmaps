@@ -1242,12 +1242,14 @@ class SeatmapSocket {
             //seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
             row: data.seat.row ,
             col: data.seat.col,
+            rowLabel: data.seat.rowLabel,
+            label: data.seat.label,
             //height: 1,
             //width: 1,
             sectionId: data.seat.sectionId,
             //sectionName: data.seat.sectionName
           } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
-        });        
+        });
 
       })
       .receive("error", (err) => {
