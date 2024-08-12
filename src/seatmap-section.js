@@ -1923,7 +1923,13 @@ class SeatmapSection {
 
     if (bgColor) {
       style.setProperty("--bgcolor", bgColor);
-      style.setProperty("--color", this.#getContrastYIQ(bgColor));
+
+      if (!elem.color || (elem.type !== "wc" && elem.type !== "item")) {
+        style.setProperty("--color", this.#getContrastYIQ(bgColor));
+      } else {
+        style.setProperty("--color", elem.color);
+      }
+
     }
   }
 
