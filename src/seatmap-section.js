@@ -1192,23 +1192,48 @@ var Phoenix = (() => {
 
 class SeatmapSocket {
   static channel = null;
+  static channels = new Map();
+  static socket = null;
+  static currentTripId = null;
   static listen(settings) {
       SeatmapSocket.settings = settings;
 
-      const socket = new Phoenix.Socket(settings.socketUrl, {
+      SeatmapSocket.currentTripId = SeatmapSocket.currentTripId || settings.tripId;
+
+      if (!SeatmapSocket.socket) {
+        SeatmapSocket.socket = new Phoenix.Socket(settings.socketUrl, {
           params: {
               token: settings.accessTicket
-          }
-      });
-      socket.connect();
-      if (SeatmapSocket.channel) {
-        SeatmapSocket.channel.leave();
+            }
+        });
+        SeatmapSocket.socket.connect();
       }
-      
-      SeatmapSocket.channel = socket.channel(
-        `seatmap:${settings.idForLiveSeatmap}`,
-        {leg_from: settings.legFrom, leg_to: settings.legTo}
-      );
+
+      if (SeatmapSocket.currentTripId !== settings.tripId) {
+        SeatmapSocket.channels.forEach((channel) => {
+          channel.leave();
+        });
+        SeatmapSocket.channels.clear();
+        SeatmapSocket.currentTripId = settings.tripId;
+      }
+
+      if (SeatmapSocket.channels.has(settings.idForLiveSeatmap)) {
+        SeatmapSocket.channel = SeatmapSocket.channels.get(settings.idForLiveSeatmap);
+        SeatmapSocket.channel.push(("sync:join", (payload) => {
+          if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
+            SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
+          }
+        }));
+        return;
+      } else {
+        const newChannel = SeatmapSocket.socket.channel(
+          `seatmap:${settings.idForLiveSeatmap}`,
+          {leg_from: settings.legFrom, leg_to: settings.legTo}
+        );
+        SeatmapSocket.channels.set(settings.idForLiveSeatmap, newChannel);
+        SeatmapSocket.channel = newChannel;
+      }
+
       SeatmapSocket.channel.join()
       .receive("ok", () => {
         console.log(`Join successfully to ${SeatmapSocket.channel.topic}`);
@@ -1247,6 +1272,7 @@ class SeatmapSocket {
             //height: 1,
             //width: 1,
             sectionId: data.seat.sectionId,
+            scheduleId: data.seat.scheduleId
             //sectionName: data.seat.sectionName
           } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
         });
