@@ -1,6 +1,6 @@
 describe("Seatmap section", function () {
 
-  let SeatmapSection = require("../src/seatmap-section.js");
+  let {SeatmapSection} = require("../src/seatmap-section.js");
   let expect = require("chai").expect;
   let JSDOM = require("jsdom").JSDOM;
   const sectionCoachBus = new SeatmapSection(

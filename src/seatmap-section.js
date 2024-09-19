@@ -2153,7 +2153,209 @@ class SeatmapSection {
   }
 }
 
+class SeatmapIframe {
+  constructor(config) {
+    this.seatmapId = config.seatmapId;
+    this.selectable = config.selectable;
+    this.liveSeatmapsActivated = config.liveSeatmapsActivated;
+    this.idForLiveSeatmap = config.idForLiveSeatmap;
+    this.accessTicket = config.accessTicket;
+    this.socketUrl = config.socketUrl;
+    this.legFrom = config.legFrom;
+    this.legTo = config.legTo;
+    this.ttlSec = config.ttlSec;
+    this.isBackOffice = config.isBackOffice;
+    this.parentAccess = config.parentAccess;
+    this.seatfees = config.seatfees;
+    this.seatClasses = config.seatClasses;
+    this.seatmap = config.seatmap;
+    this.scheduleId = config.scheduleId;
+
+    window.unSelectSeat = this.unSelectSeat.bind(this);
+    window.selectSeat = this.selectSeat.bind(this);
+    window.seatmapJoin = this.seatmapJoin.bind(this);
+    window.seatmapSeatSelected = this.seatmapSeatSelected.bind(this);
+    window.seatmapSeatUnSelected = this.seatmapSeatUnSelected.bind(this);
+    window.expiredSeats = this.expiredSeats.bind(this);
+  }
+
+  drawSeatmapIframe() {
+    const seatmapContainer = document.getElementById("seatmapContainer");
+    seatmapContainer.innerHTML = "";
+    let socketEvents = null;
+
+    const events = [
+      {
+        elementType: "seat",
+        elementStatus: ["available"],
+        type: "click",
+        cb: (evt, e, seat) => {
+          this.seatClickEvent(seat)
+        }
+      },
+      {
+        elementType: "seat",
+        elementStatus: ["available"],
+        type: "mouseover",
+        cb: (evt, e, seat) => {
+          this.parentAccess.isOverSeat(seat, { scheduleId: this.scheduleId });
+        }
+      },
+      {
+        elementType: "seat",
+        elementStatus: ["available"],
+        type: "mouseout",
+        cb: () => {
+          this.parentAccess.isOutSeat();
+        }
+      }
+    ];
+
+    if (this.accessTicket) {
+      socketEvents = {
+        scheduleId: this.scheduleId,
+        callbacks: {
+          seatClicked: this.seatClicked.bind(this),
+          seatExpired: this.expiredSeats.bind(this),
+          seatmapJoin: this.seatmapJoin.bind(this),
+          seatmapSeatSelected: this.seatmapSeatSelected,
+          seatmapSeatUnSelected: this.seatmapSeatUnSelected,
+          seatOver: this.parentAccess.isOverSeat,
+          seatOut: this.parentAccess.isOutSeat
+        },
+        socketUrl: this.socketUrl,
+        idForLiveSeatmap: this.idForLiveSeatmap,
+        accessTicket: this.accessTicket,
+        legFrom: this.legFrom,
+        legTo: this.legTo,
+        ttlSec: this.ttlSec
+      };
+    }
+
+    this.seatmap.sections.forEach((section, index) => {
+      const sectionContainer = document.createElement("div");
+      sectionContainer.id = `seatmapContainer-section-${section._id}`;
+      sectionContainer.tabIndex = 0;
+      sectionContainer.dataset.sectionName = section.name;
+      sectionContainer.classList.add("side-panel", "seatmap", "mr4", "relative");
+      seatmapContainer.appendChild(sectionContainer);
+
+      const seatmapSection = new SeatmapSection(
+        sectionContainer.id,
+        section,
+        {
+          fees: this.seatfees,
+          seatClasses: this.seatClasses,
+          allowKeyNavStatusList: ["available"],
+          events,
+          socketEvents
+        }
+      );
+      seatmapSection.draw();
+    });
+
+    if (this.parentAccess.seatmapReady) {
+      this.parentAccess.seatmapReady();
+    }
+  }
+
+  /* Handler incoming events */
+  selectSeat(currentSeat) {
+    const seat = this.parseSeat(currentSeat);
+    SeatmapSection.changeSeatDataProp(seat, "selected", "true");
+    SeatmapSocket.pushEvent("seat:selected", { col: parseInt(seat.col, 10), row: parseInt(seat.row, 10), sectionId: seat.sectionId }, currentSeat);
+  }
+
+  unSelectSeat(currentSeat) {
+    const seat = typeof currentSeat === "string" ? this.parseSeat(currentSeat) : currentSeat;
+    const seatId = typeof currentSeat === "string" ? currentSeat : this.getSeatId(currentSeat);
+    SeatmapSection.changeSeatDataProp(seat, "selected", "false");
+    SeatmapSocket.pushEvent("seat:unselected", { col: parseInt(seat.col, 10), row: parseInt(seat.row, 10), sectionId: seat.sectionId }, seatId);
+  }
+
+  /* Events from section */
+  seatClicked(seat) {
+    this.seatClickEvent(seat);
+  }
+
+  /* Expose events outside the iframe */
+  seatClickEvent(seat) {
+    try {
+      // expose event outside iframe from same domine
+      if (this.parentAccess.addSeatToSelection) {
+        this.parentAccess.addSeatToSelection(
+          Object.assign(seat, { sectionName: seat.sectionName }),
+          { scheduleId: this.scheduleId }
+        );
+      } else if (this.parentAccess.addSeatToSelectionNew) {
+        this.parentAccess.addSeatToSelectionNew(
+          Object.assign(seat, { sectionName: seat.sectionName }),
+          { scheduleId: this.scheduleId }
+        );
+      }
+    } catch (error) {
+      // expose event outside iframe from other domine
+      var data = {
+        eventName: "addSeatToSelectionNew",
+        seatLocationObject: this.get("data"),
+        iFrameInformationObject: $(window.frameElement).data()
+      };
+
+      window.parent.postMessage(data, "*");
+
+      window.addEventListener("message", function (event) {
+        if (event.data.eventName === "selectedSeatFromOtherDomain") {
+          window.selectSeat(event.data.seatId);
+        }
+
+        if (event.data.eventName === "unSelectSeatFromOtherDomain") {
+          window.unSelectSeat(event.data.seatId);
+        }
+      }, false);
+    }
+  }
+
+  /* Events from socket */
+  seatmapSeatUnSelected(seat) {
+    SeatmapSection.changeSeatStatus(seat, "available");
+    SeatmapSection.changeSeatDataProp(seat, "keynav", "true");
+  }
+
+  seatmapSeatSelected(seat) {
+    SeatmapSection.changeSeatStatus(seat, "blocked");
+  }
+
+  seatmapJoin(seats = []) {
+    (seats).forEach((s) => {
+      SeatmapSection.changeSeatStatus(s.seat, "blocked");
+    });
+  }
+
+  expiredSeats(seats = []) {
+    seats.forEach((seat) => {
+      seat.seat_id = this.getSeatId(seat);
+    });
+    this.parentAccess.expiredSeats(seats)
+  }
+
+  /* Helpers */
+  getSeatId(seat) {
+    return `section-${seat.sectionId}-row-${seat.row}-seat-${seat.col}`;
+  }
+
+  parseSeat(seatId) {
+    const properties = seatId.split('-');
+    const sectionId = properties[1];
+    const row = properties[3];
+    const col = properties[5];
+    return { row, col, sectionId };
+  }
+}
+
 try {
-  module.exports = SeatmapSection;
+  module.exports = {
+    SeatmapSection,
+    SeatmapIframe
+  };
 } catch (e) {
 }
