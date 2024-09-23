@@ -1219,11 +1219,11 @@ class SeatmapSocket {
 
       if (SeatmapSocket.channels.has(settings.idForLiveSeatmap)) {
         SeatmapSocket.channel = SeatmapSocket.channels.get(settings.idForLiveSeatmap);
-        SeatmapSocket.channel.push(("sync:join", (payload) => {
-          if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
-            SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
-          }
-        }));
+        // SeatmapSocket.channel.push(("sync:join", (payload) => {
+        //   if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
+        //     SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
+        //   }
+        // }));
         return;
       } else {
         const newChannel = SeatmapSocket.socket.channel(
@@ -2334,6 +2334,8 @@ class SeatmapIframe {
   expiredSeats(seats = []) {
     seats.forEach((seat) => {
       seat.seat_id = this.getSeatId(seat);
+      SeatmapSection.changeSeatDataProp(seat, "selected", "false");
+      SeatmapSection.changeSeatStatus(seat, "available");
     });
     this.parentAccess.expiredSeats(seats)
   }
