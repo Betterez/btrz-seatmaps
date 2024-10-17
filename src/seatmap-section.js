@@ -1455,6 +1455,10 @@ class SeatmapSection {
     }
   }  
 
+  getSeatId(seat) {
+    return `section-${seat.sectionId}-row-${seat.row}-seat-${seat.col}`;
+  }
+
   onSeatClicked(evt, e, seat) {
     if (e.dataset.status === "blocked" && (!e.dataset.selected || e.dataset.selected === "false")) {
       return;
@@ -1470,7 +1474,9 @@ class SeatmapSection {
 
   static changeSeatDataProp(elem, prop, value) {
     const sectionSelector = elem.sectionId ? `[data-section="${elem.sectionId}"]` : ``;
-    const selector = `${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
+    const containerSelector = elem.containerId ? `[data-container-id="${elem.containerId}"]` : ``
+    const selector = `${containerSelector}${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
+   
     const element = document.querySelector(selector);
     if (element) {
       element.dataset[prop] = value;
@@ -1479,8 +1485,10 @@ class SeatmapSection {
 
   static changeSeatStatus(elem, status) {
     const sectionSelector = elem.sectionId ? `[data-section="${elem.sectionId}"]` : ``;
-    const selector = `${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
+    const containerSelector = elem.containerId ? `[data-container-id="${elem.containerId}"]` : ``
+    const selector = `${containerSelector}${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const element = document.querySelector(selector);
+
     if (element) {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
@@ -1725,6 +1733,7 @@ class SeatmapSection {
                 const status = customSeat ? customSeat.status : "available";
                 const seat = {
                   sectionId: this.sectionId,
+                  containerId: this.containerId,
                   type: "seat",
                   classes: this.classes.seat,
                   row: rowNumber,
@@ -1737,6 +1746,7 @@ class SeatmapSection {
                   allowKeyNav,
                   overlapped: overlaps.length && !overlapsItem ? true : false
                 };
+                seat.seatId = this.getSeatId(seat);
                 if (customSeat && customSeat.seatClass) {
                     seat.seatClass = customSeat.seatClass;
                 }
@@ -1889,6 +1899,12 @@ class SeatmapSection {
     }
     if (elem.accessible) {
       dataset.accessible = elem.accessible;
+    }
+    if (elem.containerId) {
+      dataset.containerId = elem.containerId;
+    }
+    if (elem.seatId) {
+      dataset.seatId = elem.seatId;
     }
     return dataset;
   }
