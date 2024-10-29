@@ -2297,7 +2297,7 @@ class SeatmapIframe {
   /* Expose events outside the iframe */
   seatClickEvent(seat) {
     try {
-      // expose event outside iframe from same domine
+      // expose event outside iframe from same domain
       if (this.parentAccess.addSeatToSelection) {
         this.parentAccess.addSeatToSelection(
           Object.assign(seat, { sectionName: seat.sectionName }),
@@ -2310,11 +2310,11 @@ class SeatmapIframe {
         );
       }
     } catch (error) {
-      // expose event outside iframe from other domine
+      // expose event outside iframe from other domain
       var data = {
         eventName: "addSeatToSelectionNew",
-        seatLocationObject: this.get("data"),
-        iFrameInformationObject: $(window.frameElement).data()
+        seatLocationObject: seat,
+        iFrameInformationObject: JSON.parse(JSON.stringify(window.frameElement.dataset))
       };
 
       window.parent.postMessage(data, "*");
