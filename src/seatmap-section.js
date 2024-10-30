@@ -2214,7 +2214,7 @@ class SeatmapIframe {
         elementStatus: ["available"],
         type: "mouseover",
         cb: (evt, e, seat) => {
-          this.parentAccess.isOverSeat(seat, { scheduleId: this.scheduleId });
+          //this.parentAccess.isOverSeat(seat, { scheduleId: this.scheduleId });
         }
       },
       {
@@ -2222,7 +2222,7 @@ class SeatmapIframe {
         elementStatus: ["available"],
         type: "mouseout",
         cb: () => {
-          this.parentAccess.isOutSeat();
+          //this.parentAccess.isOutSeat();
         }
       }
     ];
@@ -2236,8 +2236,8 @@ class SeatmapIframe {
           seatmapJoin: this.seatmapJoin.bind(this),
           seatmapSeatSelected: this.seatmapSeatSelected,
           seatmapSeatUnSelected: this.seatmapSeatUnSelected,
-          seatOver: this.parentAccess.isOverSeat,
-          seatOut: this.parentAccess.isOutSeat
+          //seatOver: this.parentAccess.isOverSeat,
+          //seatOut: this.parentAccess.isOutSeat
         },
         socketUrl: this.socketUrl,
         idForLiveSeatmap: this.idForLiveSeatmap,
@@ -2270,9 +2270,9 @@ class SeatmapIframe {
       seatmapSection.draw();
     });
 
-    if (this.parentAccess.seatmapReady) {
-      this.parentAccess.seatmapReady();
-    }
+    //if (this.parentAccess.seatmapReady) {
+    //  this.parentAccess.seatmapReady();
+    //}
   }
 
   /* Handler incoming events */
