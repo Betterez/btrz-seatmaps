@@ -2314,7 +2314,7 @@ class SeatmapIframe {
       var data = {
         eventName: "addSeatToSelectionNew",
         seatLocationObject: seat,
-        iFrameInformationObject: JSON.parse(JSON.stringify(window.frameElement.dataset))
+        iFrameInformationObject: {}
       };
 
       window.parent.postMessage(data, "*");
