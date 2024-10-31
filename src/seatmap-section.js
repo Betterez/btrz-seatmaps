@@ -1420,19 +1420,19 @@ class SeatmapSection {
         this.events = [
           {
               elementType: "seat",
-              elementStatus: ["available"],
+              elementStatus: ["available", "reserved"],
               type: "click",
               cb: this.onSeatClicked.bind(this)
           },
           {
             elementType: "seat",
-            elementStatus: ["available"],
+            elementStatus: ["available", "reserved"],
             type: "mouseover",
             cb: this.onSeatMouseOver.bind(this)
           },
           {
             elementType: "seat",
-            elementStatus: ["available"],
+            elementStatus: ["available", "reserved"],
             type: "mouseout",
             cb: this.onSeatMouseOut.bind(this)
           }
