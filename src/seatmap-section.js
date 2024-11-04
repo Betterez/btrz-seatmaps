@@ -2353,7 +2353,16 @@ class SeatmapIframe {
       SeatmapSection.changeSeatDataProp(seat, "selected", "false");
       SeatmapSection.changeSeatStatus(seat, "available");
     });
-    this.parentAccess.expiredSeats(seats)
+    try {
+      this.parentAccess.expiredSeats(seats)
+    } catch(error) {
+      var data = {
+        eventName: "expiredSeats",
+        expired: seats
+      };
+
+      window.parent.postMessage(data, "*");
+    }
   }
 
   /* Helpers */
