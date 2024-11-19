@@ -2270,9 +2270,13 @@ class SeatmapIframe {
       seatmapSection.draw();
     });
 
-    //if (this.parentAccess.seatmapReady) {
-    //  this.parentAccess.seatmapReady();
-    //}
+    try {
+      if (this.parentAccess.seatmapReady) {
+        this.parentAccess.seatmapReady();
+      }
+    } catch (error) {
+      window.parent.postMessage({ eventName: "seatmapReady" }, "*");
+    }
   }
 
   /* Handler incoming events */
