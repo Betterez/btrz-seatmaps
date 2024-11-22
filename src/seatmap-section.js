@@ -1618,7 +1618,7 @@ class SeatmapSection {
   }
 
   getCapacity() {
-    return (this.seats || []).filter((s) => !s.overlapped && s.allowKeyNav && s.status !== "blocked").length;;
+    return (this.seats || []).filter((s) => !s.overlapped && s.status && s.type === "seat").length;
   }
 
   selectElement(elem) {
