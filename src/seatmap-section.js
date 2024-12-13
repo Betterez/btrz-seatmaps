@@ -1380,7 +1380,7 @@ class SeatmapSection {
     section = {},
     settings = {}
   ) {
-    this.allowKeyNavStatusList = settings.allowKeyNavStatusList || ["available", "blocked", "reserved"];
+    this.allowKeyNavStatusList = settings.allowKeyNavStatusList || ["available"];
     this.containerId = containerId;
     this.availableRows = parseInt(section.availableRows, 10) || 15;
     this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
@@ -1460,7 +1460,7 @@ class SeatmapSection {
   }
 
   onSeatClicked(evt, e, seat) {
-    if (e.dataset.status === "blocked" && (!e.dataset.selected || e.dataset.selected === "false")) {
+    if (["blocked", "reserved"].includes(e.dataset.status) && (!e.dataset.selected || e.dataset.selected === "false")) {
       return;
     }
     this.socketEvents.callbacks.seatClicked(Object.assign(
