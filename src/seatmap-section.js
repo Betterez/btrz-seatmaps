@@ -1920,6 +1920,9 @@ class SeatmapSection {
       seatRow = this.corridor.find((r) => {
         return r.row === rowNumber - 1;
       });
+      if(!seatRow){
+        return;
+      }
       seatRowLabel = (seatRow.label || seatRow.alternativeLabel);
       seatRowLabel = !this.showRowLabels || this.rowLabelType === SeatmapSection.LABEL_TYPES.Number ?
         parseInt(seatRowLabel, 10) + 1 :
