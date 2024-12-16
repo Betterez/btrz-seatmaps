@@ -1406,6 +1406,7 @@ class SeatmapSection {
     this.labels = settings.labels || SeatmapSection.LABELS;
     this.seatClasses = settings.seatClasses || [];
     this.fees = settings.fees || [];
+    this.numPad = "";
 
     this.#setSeatmap();
     this.#manageSocketEvents(settings.socketEvents)
@@ -2009,7 +2010,22 @@ class SeatmapSection {
           return true;
       }
       return false;
-  }  
+  }
+
+  #setFocusOnSeatByLabel(label) {
+    var focus = document.querySelector("[data-focus]");
+    if (focus) {
+      var section = focus.dataset.section;
+      const seats = document.querySelectorAll(`[data-keynav][data-label='${label}'][data-section='${section}']`);
+      if (seats.length) {
+        delete focus.dataset.focus;
+        seats[0].dataset.focus = true;
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
 
   #onSelectSeat(evt) {
     const focus = document.querySelector("[data-focus]");
@@ -2159,6 +2175,19 @@ class SeatmapSection {
       } else {
           this.#onJumpToNextSeat();
       }
+      evt.stopPropagation();
+      evt.preventDefault();
+    }
+
+    // Write numbers to focus on a seat
+    if ((evt.keyCode >= 48 && evt.keyCode <= 57) || (evt.keyCode >= 96 && evt.keyCode <= 105)) {
+      if (this.numPad === "") {
+        setTimeout(() => {
+          this.#setFocusOnSeatByLabel(this.numPad);
+          this.numPad = "";
+        }, "500");
+      }
+      this.numPad += evt.key
       evt.stopPropagation();
       evt.preventDefault();
     }
