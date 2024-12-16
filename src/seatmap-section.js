@@ -1523,6 +1523,7 @@ class SeatmapSection {
   }
 
   draw() {
+    const numericDisplay = this.#createHTMLElement("div", "numeric-display, absolute, right-0, left-0, center, z2, bold, opacity3, color-grey-darkest");
     const container = document.getElementById(this.containerId);
     if (container) {
       container.onkeydown = (evt) => { this.#manageKeyboardNavigation(evt); };
@@ -1531,6 +1532,7 @@ class SeatmapSection {
       container.style.setProperty("--rows", this.availableRows);
       container.style["background-color"] = "#F9F9F9";
       container.innerHTML = "";
+      container.appendChild(numericDisplay);
 
       if (this.sectionName) {
         const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
@@ -2027,6 +2029,14 @@ class SeatmapSection {
     return false;
   }
 
+  #showNumPad(numPad) {
+    var display = document.querySelector(".numeric-display");
+    if (display) {
+      display.innerHTML = numPad;
+    }
+    return false;
+  }
+
   #onSelectSeat(evt) {
     const focus = document.querySelector("[data-focus]");
 
@@ -2185,9 +2195,11 @@ class SeatmapSection {
         setTimeout(() => {
           this.#setFocusOnSeatByLabel(this.numPad);
           this.numPad = "";
+          this.#showNumPad(this.numPad);
         }, "500");
       }
       this.numPad += evt.key
+      this.#showNumPad(this.numPad);
       evt.stopPropagation();
       evt.preventDefault();
     }
