@@ -2362,7 +2362,9 @@ class SeatmapIframe {
       var data = {
         eventName: "addSeatToSelectionNew",
         seatLocationObject: seat,
-        iFrameInformationObject: {}
+        iFrameInformationObject: {
+          scheduleId: config.scheduleId
+        }
       };
 
       window.parent.postMessage(data, "*");
