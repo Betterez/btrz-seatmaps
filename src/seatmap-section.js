@@ -1398,6 +1398,7 @@ class SeatmapSection {
     this.showRowLabels = section.showRowLabels;
     this.lastRowNoGap = section.lastRowNoGap;
     this.sectionName = section.name || "";
+    this.showSectionName = typeof(section.showSectionName) !== "undefined" ? section.showSectionName : true;
     this.sectionId = section._id || "";
     this.capacity = section.capacity || 60;
     this.rowLabelRange = section.rowLabelRange;
@@ -1534,7 +1535,7 @@ class SeatmapSection {
       container.innerHTML = "";
       container.appendChild(numericDisplay);
 
-      if (this.sectionName) {
+      if (this.sectionName && this.showSectionName) {
         const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
         const sectionNameContainer = this.#createHTMLElement("div", "bg-info, uppercase, fs6, color-info-lightest, box-shadow-black-10, border, border-info-light, inline-block, rounded-max, px2, line-height-4", this.sectionName);
         sectionNameWrapper.appendChild(sectionNameContainer);
