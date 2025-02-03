@@ -1506,7 +1506,9 @@ class SeatmapSection {
       if (status === "available" || status === "unavailable") {
         element.dataset.keynav = "false";
       }      
-
+      if(status === "unavailable" && element.dataset.accessible){
+        element.dataset.accessible = false;
+      }
 
     }
   }
