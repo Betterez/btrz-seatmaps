@@ -2364,7 +2364,8 @@ class SeatmapIframe {
       // expose event outside iframe from other domain
       var data = {
         eventName: "addSeatToSelectionNew",
-        seatLocationObject: seat,
+        //keeps compatibility with old seatmaps implementation
+        seatLocationObject: {...seat, seatNumber: seat.label},
         iFrameInformationObject: {
           scheduleId: config.scheduleId
         }
