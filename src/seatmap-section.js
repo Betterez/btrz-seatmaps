@@ -1489,8 +1489,7 @@ class SeatmapSection {
     const sectionSelector = elem.sectionId ? `[data-section="${elem.sectionId}"]` : ``;
     const containerSelector = elem.containerId ? `[data-container-id="${elem.containerId}"]` : ``
     const selector = `${containerSelector}${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
-    const element = document.querySelector(selector);
-
+    const element = document.querySelector(`[data-type="seat"]${selector}`);
     if (element) {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
