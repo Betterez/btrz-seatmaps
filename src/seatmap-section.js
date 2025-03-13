@@ -1720,9 +1720,9 @@ class SeatmapSection {
             const hideSeat = overlaps.find((o) => {
                 return ["driver", "corridor"].includes(o.type);
             });
-            const overlapsItem = overlaps.find((o) => {
-                return ["item"].includes(o.type);
-            });
+            const isOverlapped = overlaps.filter((o) => {
+                return !["item"].includes(o.type);
+            }).length ? true : false;
             if (!hideSeat) {
                 const colNumber = cIndex + 1;
                 const rowNumber = rIndex + 1;
@@ -1730,8 +1730,7 @@ class SeatmapSection {
                     return st.col === colNumber && st.row === rowNumber;
                 });
                 // eslint-disable-next-line no-unneeded-ternary
-                const allowKeyNav = this.allowKeyNavStatusList.includes(customSeat ? customSeat.status : "available") &&
-                    (!overlaps.length || overlapsItem) ? true : false;
+                const allowKeyNav = this.allowKeyNavStatusList.includes(customSeat ? customSeat.status : "available") && !isOverlapped;
 
                 const rowLabel = this.#getSeatRowLabel(rowNumber);
                 const label = customSeat ? customSeat.label : "";
@@ -1749,7 +1748,7 @@ class SeatmapSection {
                   status,
                   label,
                   allowKeyNav,
-                  overlapped: overlaps.length && !overlapsItem ? true : false
+                  overlapped: isOverlapped
                 };
                 seat.seatId = this.getSeatId(seat);
                 if (customSeat && customSeat.seatClass) {
