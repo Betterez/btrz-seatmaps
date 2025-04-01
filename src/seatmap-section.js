@@ -1378,7 +1378,8 @@ class SeatmapSection {
   constructor(
     containerId = "",
     section = {},
-    settings = {}
+    settings = {},
+    isBackOffice = false
   ) {
     this.allowKeyNavStatusList = settings.allowKeyNavStatusList || ["available"];
     this.containerId = containerId;
@@ -1408,6 +1409,7 @@ class SeatmapSection {
     this.seatClasses = settings.seatClasses || [];
     this.fees = settings.fees || [];
     this.numPad = "";
+    this.isBackOffice = isBackOffice;
 
     this.#setSeatmap();
     this.#manageSocketEvents(settings.socketEvents)
@@ -1462,7 +1464,11 @@ class SeatmapSection {
   }
 
   onSeatClicked(evt, e, seat) {
-    if (["blocked", "reserved"].includes(e.dataset.status) && (!e.dataset.selected || e.dataset.selected === "false")) {
+    const notAvailableSeats = ["blocked"]
+    if (!this.isBackOffice) {
+      notAvailableSeats.push("reserved");
+    }
+    if (notAvailableSeats.includes(e.dataset.status) && (!e.dataset.selected || e.dataset.selected === "false")) {
       return;
     }
     this.socketEvents.callbacks.seatClicked(Object.assign(
@@ -1494,6 +1500,7 @@ class SeatmapSection {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
       element.title = element.title.replace(oldStatusText, newStatusText);
+      element.dataset.isReserved = element.dataset.isReserved || element.dataset.status === "reserved";
       element.dataset.status = status;
 
       if (element.dataset.selected) {
@@ -1508,7 +1515,9 @@ class SeatmapSection {
       if(status === "unavailable" && element.dataset.accessible){
         element.dataset.accessible = false;
       }
-
+      if (status == "available" && (element.dataset.isReserved === "true")) {
+        element.dataset.status = "reserved";
+      }
     }
   }
 
