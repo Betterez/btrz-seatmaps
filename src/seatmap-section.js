@@ -1408,6 +1408,7 @@ class SeatmapSection {
     this.labels = settings.labels || SeatmapSection.LABELS;
     this.seatClasses = settings.seatClasses || [];
     this.fees = settings.fees || [];
+    this.isEditing = settings.isEditing || false;
     this.numPad = "";
     this.isBackOffice = isBackOffice;
 
@@ -1500,8 +1501,6 @@ class SeatmapSection {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
       element.title = element.title.replace(oldStatusText, newStatusText);
-      element.dataset.isReserved = element.dataset.isReserved || element.dataset.status === "reserved";
-      element.dataset.status = status;
 
       if (element.dataset.selected) {
         element.dataset.keynav = "true";
@@ -1514,9 +1513,6 @@ class SeatmapSection {
       }      
       if(status === "unavailable" && element.dataset.accessible){
         element.dataset.accessible = false;
-      }
-      if (status == "available" && (element.dataset.isReserved === "true")) {
-        element.dataset.status = "reserved";
       }
     }
   }
@@ -1743,7 +1739,10 @@ class SeatmapSection {
 
                 const rowLabel = this.#getSeatRowLabel(rowNumber);
                 const label = customSeat ? customSeat.label : "";
-                const status = customSeat ? customSeat.status : "available";
+                let status = customSeat ? customSeat.status : "available";
+                if (status === "reserved" && !this.isEditing) {
+                  status = this.isBackOffice ? "available" : "blocked";
+                }
                 const seat = {
                   sectionId: this.sectionId,
                   containerId: this.containerId,
