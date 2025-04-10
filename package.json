@@ -1,6 +1,6 @@
 {
   "name": "btrz-seatmaps",
-  "version": "1.71.1",
+  "version": "1.71.2",
   "description": "Betterez Seatmaps",
   "main": "index.js",
   "scripts": {
