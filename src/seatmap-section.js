@@ -1501,7 +1501,7 @@ class SeatmapSection {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
       element.title = element.title.replace(oldStatusText, newStatusText);
-
+      element.dataset.status = status;
       if (element.dataset.selected) {
         element.dataset.keynav = "true";
       }
