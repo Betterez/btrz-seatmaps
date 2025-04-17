@@ -1498,7 +1498,7 @@ class SeatmapSection {
     const selector = `${containerSelector}${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     const altSelector = `${sectionSelector}[style*='grid-area: ${elem.row} / ${elem.col} / ${parseInt(elem.row, 10) + (elem.height || 1)} / ${parseInt(elem.col, 10) + (elem.width || 1)};']`;
     
-    const element = document.querySelector(`[data-type="seat"]${selector}`);
+    let element = document.querySelector(`[data-type="seat"]${selector}`);
 
     if(!element){
       element = document.querySelector("[data-type=\"seat\"]".concat(altSelector));
