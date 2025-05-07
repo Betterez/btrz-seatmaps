@@ -1328,6 +1328,7 @@ class SeatmapSection {
         seatClass: "Seat class",
         fee: "Fee",
         female: "Female",
+        male: "Male",
         suggested: "Suggested",
         accessible: "Accessible"
     };
@@ -1962,10 +1963,13 @@ class SeatmapSection {
     const feeName = fee && fee.name ? `${labels.fee}: ${fee.name} (+${fee.type === "$" ? "$" : ""}${fee.value}${fee.type === "%" ? "%" : ""}) \n` : "";
 
     const isAccessible = elem.accessible ? `${labels.accessible}` : "";
-    const isFemale = elem.female ? `${labels.female}` : "";
+    let gender = "";
+    if (elem.status === "unavailable") {
+      gender = elem.female ? `${labels.female}` : `${labels.male}`;
+    }
     const isSuggested = elem.suggested ? `${labels.suggested}` : "";
 
-    return `${section}${row}${seat}${status}${seatClassName}${feeName}${isAccessible}${isFemale}${isSuggested}`;
+    return `${section}${row}${seat}${status}${seatClassName}${feeName}${isAccessible}${gender}${isSuggested}`;
   }
 
   #setElementStyle(style, elem) {
@@ -2421,7 +2425,9 @@ class SeatmapIframe {
       SeatmapSection.changeSeatStatus(seat, "available");
     });
     try {
-      this.parentAccess.expiredSeats(seats)
+      this.parentAccess.expiredSeats(seats, {
+        scheduleId: config.scheduleId
+      });
     } catch(error) {
       var data = {
         eventName: "expiredSeats",
