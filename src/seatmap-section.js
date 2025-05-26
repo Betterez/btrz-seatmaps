@@ -1509,7 +1509,7 @@ class SeatmapSection {
       const newStatusText = `${status.charAt(0).toUpperCase()}${status.slice(1)}`;
       const oldStatusText = `${element.dataset.status.charAt(0).toUpperCase()}${element.dataset.status.slice(1)}`;
       element.title = element.title.replace(oldStatusText, newStatusText);
-      element.dataset.status = status;
+      element.dataset.status = element.dataset.isReserved && status === "available" ? "reserved" : status;
       if (element.dataset.selected) {
         element.dataset.keynav = "true";
       }
@@ -1749,7 +1749,7 @@ class SeatmapSection {
                 const label = customSeat ? customSeat.label : "";
                 let status = customSeat ? customSeat.status : "available";
                 if (status === "reserved" && !this.isEditing) {
-                  status = this.isBackOffice ? "available" : "blocked";
+                  status = this.isBackOffice ? "reserved" : "blocked";
                 }
                 const seat = {
                   sectionId: this.sectionId,
@@ -1764,7 +1764,8 @@ class SeatmapSection {
                   status,
                   label,
                   allowKeyNav,
-                  overlapped: isOverlapped
+                  overlapped: isOverlapped,
+                  isReserved: status === "reserved"
                 };
                 seat.seatId = this.getSeatId(seat);
                 if (customSeat && customSeat.seatClass) {
@@ -1925,6 +1926,9 @@ class SeatmapSection {
     }
     if (elem.seatId) {
       dataset.seatId = elem.seatId;
+    }
+    if (elem.isReserved) {
+      dataset.isReserved = elem.isReserved;
     }
     return dataset;
   }
