@@ -1297,6 +1297,12 @@ class SeatmapSocket {
       SeatmapSocket.channel.push(name, payload);
     }
   }
+  static clear() {
+    SeatmapSocket.channels.forEach((channel) => {
+      channel.leave();
+    });
+    SeatmapSocket.channels.clear();
+  }
 }
 
 class SeatmapSection {
