@@ -1280,6 +1280,9 @@ class SeatmapSocket {
       })
       .receive("error", (err) => {
           console.log(`Failed join: ${err}`);
+      }).
+      receive("timeout" ,(err)=>{
+        console.log(`Timed Out`);
       });
       
   }
@@ -1302,6 +1305,12 @@ class SeatmapSocket {
       channel.leave();
     });
     SeatmapSocket.channels.clear();
+  }
+  static disconnect(){
+    SeatmapSocket.socket.disconnect();
+  }
+  static connect() {
+    SeatmapSocket.socket.connect();
   }
 }
 
