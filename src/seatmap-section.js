@@ -1312,6 +1312,15 @@ class SeatmapSocket {
   static connect() {
     SeatmapSocket.socket.connect();
   }
+  static leaveChannel(idForLiveSeatmap) {
+    const channel = SeatmapSocket.channels.get(idForLiveSeatmap);
+    if(channel && channel.state === "joined"){
+      channel.leave()
+      .receive("ok", () => { 
+        SeatmapSocket.channels.delete(idForLiveSeatmap);
+      });
+    }
+  }
 }
 
 class SeatmapSection {
