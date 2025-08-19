@@ -1210,10 +1210,12 @@ class SeatmapSocket {
       }
 
       if (SeatmapSocket.currentTripId !== settings.tripId) {
-        SeatmapSocket.channels.forEach((channel) => {
-          channel.leave();
-        });
-        SeatmapSocket.channels.clear();
+        if(!SeatmapSocket.settings.keepChannelsConnected){
+          SeatmapSocket.channels.forEach((channel) => {
+            channel.leave();
+          });
+          SeatmapSocket.channels.clear();
+        }
         SeatmapSocket.currentTripId = settings.tripId;
       }
 
@@ -1232,58 +1234,62 @@ class SeatmapSocket {
         );
         SeatmapSocket.channels.set(settings.idForLiveSeatmap, newChannel);
         SeatmapSocket.channel = newChannel;
+        joinChannel(newChannel);
       }
 
-      SeatmapSocket.channel.join()
-      .receive("ok", () => {
-        console.log(`Join successfully to ${SeatmapSocket.channel.topic}`);
+      function joinChannel(vChannel){
+        vChannel.join()
+        .receive("ok", () => {
+          console.log(`Join successfully to ${vChannel.topic}`);
 
-        SeatmapSocket.channel.on("seat:selected", (payload) => {
-          console.log("seat:selected", payload);
-          const selectedSeat = payload.selected_seat.seat || payload.selected_seat.seat_id;
-          if (SeatmapSocket.settings.callbacks.seatmapSeatSelected && selectedSeat) {
-            SeatmapSocket.settings.callbacks.seatmapSeatSelected(selectedSeat);
-          }
+          vChannel.on("seat:selected", (payload) => {
+            console.log("seat:selected", payload);
+            const selectedSeat = payload.selected_seat.seat || payload.selected_seat.seat_id;
+            if (SeatmapSocket.settings.callbacks.seatmapSeatSelected && selectedSeat) {
+              SeatmapSocket.settings.callbacks.seatmapSeatSelected(selectedSeat);
+            }
+          });
+
+          vChannel.on("seat:unselected", (payload) => {
+            console.log("seat:unselected", payload);
+            const unselectedSeat = payload.unselected_seat.seat;
+            if (SeatmapSocket.settings.callbacks.seatmapSeatUnSelected && unselectedSeat) {
+              SeatmapSocket.settings.callbacks.seatmapSeatUnSelected(unselectedSeat);
+            }
+          });
+
+          vChannel.on("sync:join", (payload) => {
+            console.log("sync:join", payload);
+            if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
+              SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
+            }
+          });
+
+          vChannel.on("sync:seats", (payload) => {
+            console.log("sync:seats", payload);
+            SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
+              //seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
+              row: data.seat.row ,
+              col: data.seat.col,
+              rowLabel: data.seat.rowLabel,
+              label: data.seat.label,
+              //height: 1,
+              //width: 1,
+              sectionId: data.seat.sectionId,
+              scheduleId: data.seat.scheduleId
+              //sectionName: data.seat.sectionName
+            } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
+          });
+
+        })
+        .receive("error", (err) => {
+            console.log(`Failed join: ${err}`);
+        }).
+        receive("timeout" ,(err)=>{
+          console.log(`Timed Out`);
         });
+      }
 
-        SeatmapSocket.channel.on("seat:unselected", (payload) => {
-          console.log("seat:unselected", payload);
-          const unselectedSeat = payload.unselected_seat.seat;
-          if (SeatmapSocket.settings.callbacks.seatmapSeatUnSelected && unselectedSeat) {
-            SeatmapSocket.settings.callbacks.seatmapSeatUnSelected(unselectedSeat);
-          }
-        });
-
-        SeatmapSocket.channel.on("sync:join", (payload) => {
-          console.log("sync:join", payload);
-          if (SeatmapSocket.settings.callbacks.seatmapJoin && payload.seats && payload.seats.length) {
-            SeatmapSocket.settings.callbacks.seatmapJoin(payload.seats);
-          }
-        });
-
-        SeatmapSocket.channel.on("sync:seats", (payload) => {
-          console.log("sync:seats", payload);
-          SeatmapSocket.settings.callbacks.seatExpired(payload.expired.map((data) => { return {
-            //seat_id: `${data.seat.row}-${data.seat.col}-${data.seat.label}`,
-            row: data.seat.row ,
-            col: data.seat.col,
-            rowLabel: data.seat.rowLabel,
-            label: data.seat.label,
-            //height: 1,
-            //width: 1,
-            sectionId: data.seat.sectionId,
-            scheduleId: data.seat.scheduleId
-            //sectionName: data.seat.sectionName
-          } }) , {scheduleId: SeatmapSocket.settings.scheduleId});
-        });
-
-      })
-      .receive("error", (err) => {
-          console.log(`Failed join: ${err}`);
-      }).
-      receive("timeout" ,(err)=>{
-        console.log(`Timed Out`);
-      });
       
   }
   static pushEvent(name, seat, seatId) {
