@@ -1333,9 +1333,9 @@ class SeatmapSection {
   static get CLASSES () {
     return {
         item: "item",
-        corridor: "fs7, flex, items-center, justify-around",
+        corridor: "text-size-62, flex, items-center, justify-around",
         wc: "wc",
-        seat: "bg-white, border, border-grey, rounded, flex, justify-around, items-center, relative, opacity5-hover, pointer",
+        seat: "bg-color-static-white-canvas, border, border-color-primary, rounded-xs, flex, justify-around, items-center, relative, hover:opacity-50, cursor-pointer",
         stairwayVertical: "stairway-vertical",
         stairwayHorizontal: "stairway-horizontal",
         table: "seatmap-table",
@@ -1568,7 +1568,7 @@ class SeatmapSection {
   }
 
   draw() {
-    const numericDisplay = this.#createHTMLElement("div", "numeric-display, absolute, right-0, left-0, center, z2, bold, opacity3, color-grey-darkest");
+    const numericDisplay = this.#createHTMLElement("div", "numeric-display, absolute, right-0, left-0, text-center, z-[2], font-weight-bolder, opacity-20, text-color-primary");
     const container = document.getElementById(this.containerId);
     if (container) {
       container.onkeydown = (evt) => { this.#manageKeyboardNavigation(evt); };
@@ -1580,8 +1580,8 @@ class SeatmapSection {
       container.appendChild(numericDisplay);
 
       if (this.sectionName && this.showSectionName) {
-        const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, center, mbn3, z2");
-        const sectionNameContainer = this.#createHTMLElement("div", "bg-info, uppercase, fs6, color-info-lightest, box-shadow-black-10, border, border-info-light, inline-block, rounded-max, px2, line-height-4", this.sectionName);
+        const sectionNameWrapper = this.#createHTMLElement("div", "absolute, bottom-0, right-0, left-0, text-center, -mb-200, z-[2]");
+        const sectionNameContainer = this.#createHTMLElement("div", "bg-bz-info-default, uppercase, text-size-87, text-bz-info-lightest, shadow-elevation-flat, border, border-bz-info-light, inline-block, rounded-pill, px-100, leading-175", this.sectionName);
         sectionNameWrapper.appendChild(sectionNameContainer);
         container.appendChild(sectionNameWrapper);
       }
@@ -2036,7 +2036,7 @@ class SeatmapSection {
   }
 
   #getContrastYIQ(hexcolor) {
-    var darkColor = "#000000";
+    var darkColor = "#14171A";
     var lightColor = "#FFFFFF";
     var color = (hexcolor.charAt(0) === '#') ? hexcolor.substring(1, 7) : hexcolor;
     var r = parseInt(color.substring(0, 2), 16); // hexToR
@@ -2351,7 +2351,7 @@ class SeatmapIframe {
       sectionContainer.id = `seatmapContainer-section-${section._id}`;
       sectionContainer.tabIndex = 0;
       sectionContainer.dataset.sectionName = section.name;
-      sectionContainer.classList.add("side-panel", "seatmap", "mr4", "relative");
+      sectionContainer.classList.add("side-panel", "seatmap", "mr-400", "relative");
       seatmapContainer.appendChild(sectionContainer);
 
       const seatmapSection = new SeatmapSection(
