@@ -1415,6 +1415,7 @@ class SeatmapSection {
     this.allowKeyNavStatusList = settings.allowKeyNavStatusList || ["available"];
     this.containerId = containerId;
     this.availableRows = parseInt(section.availableRows, 10) || 15;
+    this.allowSeatOrientation = section.allowSeatOrientation;
     this.seatsPerRowLeft = typeof(section.seatsPerRowLeft) !== "undefined" ? section.seatsPerRowLeft : 2;
     this.seatsPerRowRight = typeof(section.seatsPerRowRight) !== "undefined" ? section.seatsPerRowRight : 2;
     this.rowsEnumNoGaps = section.rowsEnumNoGaps;
@@ -1798,6 +1799,11 @@ class SeatmapSection {
                   isReserved: status === "reserved"
                 };
                 seat.seatId = this.getSeatId(seat);
+
+                if (this.allowSeatOrientation) {
+                    seat.orientation = customSeat && customSeat.orientation ? customSeat.orientation : "front";
+                }
+
                 if (customSeat && customSeat.seatClass) {
                     seat.seatClass = customSeat.seatClass;
                 }
@@ -1959,6 +1965,9 @@ class SeatmapSection {
     }
     if (elem.isReserved) {
       dataset.isReserved = elem.isReserved;
+    }
+    if (elem.orientation) {
+      dataset.orientation = elem.orientation;
     }
     return dataset;
   }
