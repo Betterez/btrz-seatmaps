@@ -1816,7 +1816,7 @@ class SeatmapSection {
                 if (customSeat && customSeat.female) {
                     seat.female = customSeat.female;
                 }
-                if (customSeat && customSeat.accessible) {
+                if (customSeat && customSeat.accessible && status !== "unavailable") {
                     seat.accessible = customSeat.accessible;
                 }
                 this.seats.push(seat);
