@@ -1666,8 +1666,13 @@ class SeatmapSection {
     }
   }
 
-  getCapacity() {
-    return (this.seats || []).filter((s) => !s.overlapped && s.status && s.type === "seat").length;
+  getCapacity(statusToExclude = []) {
+    return (this.seats || []).filter((s) =>
+      !s.overlapped &&
+      s.status &&
+      s.type === "seat" &&
+      !statusToExclude.includes(s.status)
+    ).length;
   }
 
   selectElement(elem) {
