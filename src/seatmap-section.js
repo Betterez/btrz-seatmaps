@@ -1329,6 +1329,7 @@ class SeatmapSocket {
   }
 }
 
+
 class SeatmapSection {
   static get CLASSES () {
     return {
