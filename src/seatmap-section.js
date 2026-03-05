@@ -1505,13 +1505,16 @@ class SeatmapSection {
     if (notAvailableSeats.includes(e.dataset.status) && (!e.dataset.selected || e.dataset.selected === "false")) {
       return;
     }
-    this.socketEvents.callbacks.seatClicked(Object.assign(
-      seat,
-      {
-        sectionName: this.sectionName,
-        sectionId: this.sectionId
-      }),
-      {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId});
+    if (this.socketEvents.callbacks.seatClicked) {
+      this.socketEvents.callbacks.seatClicked(Object.assign(
+        seat,
+        {
+          sectionName: this.sectionName,
+          sectionId: this.sectionId
+        }),
+        {tripId: this.socketEvents.tripId, scheduleId: this.socketEvents.scheduleId}
+      );
+    }
   }
 
   static changeSeatDataProp(elem, prop, value) {
