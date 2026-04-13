@@ -1361,7 +1361,8 @@ class SeatmapSection {
         female: "Female",
         male: "Male",
         suggested: "Suggested",
-        accessible: "Accessible"
+        accessible: "Accessible",
+        emergency: "Emergency exit"
     };
   }
 
@@ -1556,6 +1557,9 @@ class SeatmapSection {
       }      
       if(status === "unavailable" && element.dataset.accessible){
         element.dataset.accessible = false;
+      }
+      if(status === "unavailable" && element.dataset.emergency){
+        element.dataset.emergency = false;
       }
     }
   }
@@ -1830,6 +1834,9 @@ class SeatmapSection {
                 if (customSeat && customSeat.accessible && status !== "unavailable") {
                     seat.accessible = customSeat.accessible;
                 }
+                if (customSeat && customSeat.emergency && status !== "unavailable") {
+                    seat.emergency = customSeat.emergency;
+                }
                 this.seats.push(seat);
             }
         });
@@ -1968,6 +1975,9 @@ class SeatmapSection {
     if (elem.accessible) {
       dataset.accessible = elem.accessible;
     }
+    if (elem.emergency) {
+      dataset.emergency = elem.emergency;
+    }
     if (elem.containerId) {
       dataset.containerId = elem.containerId;
     }
@@ -2017,13 +2027,14 @@ class SeatmapSection {
     const feeName = fee && fee.name ? `${labels.fee}: ${fee.name} (+${fee.type === "$" ? "$" : ""}${fee.value}${fee.type === "%" ? "%" : ""}) \n` : "";
 
     const isAccessible = elem.accessible ? `${labels.accessible}` : "";
+    const isEmergency = elem.emergency ? `${labels.emergency}` : "";
     let gender = "";
     if (elem.status === "unavailable") {
       gender = elem.female ? `${labels.female}` : `${labels.male}`;
     }
     const isSuggested = elem.suggested ? `${labels.suggested}` : "";
 
-    return `${section}${row}${seat}${status}${seatClassName}${feeName}${isAccessible}${gender}${isSuggested}`;
+    return `${section}${row}${seat}${status}${seatClassName}${feeName}${isAccessible}${isEmergency}${gender}${isSuggested}`;
   }
 
   #setElementStyle(style, elem) {
