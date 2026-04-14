@@ -1335,7 +1335,7 @@ class SeatmapSection {
     return {
         item: "item",
         corridor: "text-size-62, flex, items-center, justify-around",
-        wc: "wc",
+        wc: "wc, text-center, px-100",
         seat: "bg-color-static-white-canvas, border, border-bz-grey-default, rounded-xs, flex, justify-around, items-center, relative, hover:opacity-50, cursor-pointer",
         stairwayVertical: "stairway-vertical",
         stairwayHorizontal: "stairway-horizontal",
@@ -1601,7 +1601,8 @@ class SeatmapSection {
         ...this.seats
       ].forEach((elem) => {
         const classes = this.#getElementClasses(elem);
-        const e = this.#createHTMLElement("div", classes, elem.label || "");
+        const label = this.#createHTMLElement("div", "", elem.label || "");
+        const e = this.#createHTMLElement("div", classes, label.outerHTML);
         const dataset = this.#getSeatDataset(elem);
         Object.keys(dataset).forEach((k) => {
           e.dataset[k] = dataset[k];
