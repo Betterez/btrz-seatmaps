@@ -1904,7 +1904,7 @@ class SeatmapSection {
     if (elem.type === "table") {
       return this.classes.table;
     }
-    if (elem.type === "wc") {
+    if (elem.type === "wc" || elem.type === "fixed-item") {
       return this.classes.wc;
     }
     if (elem.type === "item") {
@@ -2058,7 +2058,7 @@ class SeatmapSection {
     if (bgColor) {
       style.setProperty("--bgcolor", bgColor);
 
-      if (!elem.color || (elem.type !== "wc" && elem.type !== "item")) {
+      if (!elem.color || (elem.type !== "wc" && elem.type !== "fixed-item" && elem.type !== "item")) {
         style.setProperty("--color", this.#getContrastYIQ(bgColor));
       } else {
         style.setProperty("--color", elem.color);
