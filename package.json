@@ -4,8 +4,8 @@
   "description": "Betterez Seatmaps",
   "main": "index.js",
   "scripts": {
-    "test": "NODE_ENV=test mocha -- --ui bdd -t 5000 --exit",
-    "test-w": "NODE_ENV=test mocha -w -t 5000",
+    "test": "NODE_ENV=test node --test",
+    "test-w": "NODE_ENV=test node --test --watch",
     "transpile": "babel -d lib/ src/",
     "commit-transpile": "git add lib/ && git commit --allow-empty -m \"transpiled src\"",
     "preversion": "npm test && npm run transpile && npm run commit-transpile",
@@ -16,8 +16,7 @@
     "url": "https://github.com/Betterez/btrz-seatmaps.git"
   },
   "keywords": [
-    "seatmaps",
-    "io.js"
+    "seatmaps"
   ],
   "author": {
     "name": "hgarcia",
@@ -36,11 +35,9 @@
   "homepage": "https://github.com/Betterez/btrz-seatmaps",
   "dependencies": {},
   "devDependencies": {
-    "@babel/cli": "^7.15.8",
-    "@babel/core": "^7.15.8",
-    "@babel/preset-env": "^7.15.8",
-    "chai": "^3.0.0",
-    "mocha": "10.2.0",
-    "jsdom": "^18.0.0"
+    "@babel/cli": "7.28.6",
+    "@babel/core": "7.29.0",
+    "@babel/preset-env": "7.29.2",
+    "jsdom": "29.0.2"
   }
 }
