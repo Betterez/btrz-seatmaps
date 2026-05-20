@@ -147,6 +147,90 @@ describe("Seatmap section", function () {
     });
   });
 
+  describe("Keyboard navigation on reserved seats.", () => {
+    const buildSection = ({isBackOffice, isEditing}) => {
+      return new SeatmapSection(
+        "grid",
+        {
+          _id: "section-reserved-test",
+          rowsEnumNoGaps: true,
+          seatsPerRowLeft: 2,
+          seatsPerRowRight: 2,
+          facilities: [
+            {
+              type: "driver", row: 1, col: 1, height: 1, width: 5, label: "",
+              alignment: { key: 1, value: "Left" }
+            }
+          ],
+          availableRows: 5,
+          availableCols: 5,
+          customSeats: [
+            { row: 2, col: 1, status: "reserved", label: "1" },
+            { row: 2, col: 2, status: "available", label: "2" }
+          ],
+          enumType: 2,
+          enumDir: 2,
+          startingSeatLabel: 1,
+          rowLabelType: 1,
+          seatLabelType: 1,
+          startingRowLabel: "1",
+          showRowLabels: true,
+          lastRowNoGap: true,
+          name: "Main",
+          capacity: 16,
+          seats: [],
+          rowLabelRange: ""
+        },
+        {isEditing},
+        isBackOffice
+      );
+    };
+
+    it("Should make reserved seats keyboard-navigable in backoffice.", () => {
+      const section = buildSection({isBackOffice: true, isEditing: false});
+      const reservedSeat = section.seats.find((s) => s.row === 2 && s.col === 1);
+      const availableSeat = section.seats.find((s) => s.row === 2 && s.col === 2);
+
+      assert.equal(reservedSeat.status, "reserved");
+      assert.equal(reservedSeat.allowKeyNav, true);
+      assert.equal(availableSeat.allowKeyNav, true);
+
+      section.draw();
+      assert.equal(
+        document.querySelectorAll("#grid [data-type='seat'][data-status='reserved'][data-keynav='true']").length,
+        1
+      );
+    });
+
+    it("Should make reserved seats keyboard-navigable in the seatmap editor.", () => {
+      const section = buildSection({isBackOffice: false, isEditing: true});
+      const reservedSeat = section.seats.find((s) => s.row === 2 && s.col === 1);
+
+      assert.equal(reservedSeat.status, "reserved");
+      assert.equal(reservedSeat.allowKeyNav, true);
+
+      section.draw();
+      assert.equal(
+        document.querySelectorAll("#grid [data-type='seat'][data-status='reserved'][data-keynav='true']").length,
+        1
+      );
+    });
+
+    it("Should NOT make reserved seats keyboard-navigable in websales (downgraded to blocked).", () => {
+      const section = buildSection({isBackOffice: false, isEditing: false});
+      const reservedSeat = section.seats.find((s) => s.row === 2 && s.col === 1);
+
+      assert.equal(reservedSeat.status, "blocked");
+      assert.equal(reservedSeat.allowKeyNav, false);
+
+      section.draw();
+      assert.equal(
+        document.querySelectorAll("#grid [data-type='seat'][data-status='reserved'][data-keynav='true']").length,
+        0
+      );
+    });
+  });
+
   describe("Building seats from initial Shuttle bus template.", () => {
     it("Should process settings properly.", () => {
       assert.equal(sectionShuttleBus.availableCols, 4);

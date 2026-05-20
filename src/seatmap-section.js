@@ -1787,15 +1787,16 @@ class SeatmapSection {
                 const customSeat = this.customSeats.find((st) => {
                     return st.col === colNumber && st.row === rowNumber;
                 });
-                // eslint-disable-next-line no-unneeded-ternary
-                const allowKeyNav = this.allowKeyNavStatusList.includes(customSeat ? customSeat.status : "available") && !isOverlapped;
-
                 const rowLabel = this.#getSeatRowLabel(rowNumber);
                 const label = customSeat ? customSeat.label : "";
                 let status = customSeat ? customSeat.status : "available";
                 if (status === "reserved" && !this.isEditing) {
                   status = this.isBackOffice ? "reserved" : "blocked";
                 }
+                const allowKeyNav = (
+                  this.allowKeyNavStatusList.includes(status) ||
+                  status === "reserved"
+                ) && !isOverlapped;
                 const seat = {
                   sectionId: this.sectionId,
                   containerId: this.containerId,
