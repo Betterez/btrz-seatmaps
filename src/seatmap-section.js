@@ -2481,7 +2481,11 @@ class SeatmapIframe {
 
   seatmapJoin(seats = []) {
     (seats).forEach((s) => {
-      SeatmapSection.changeSeatStatus(s.seat, "blocked");
+      const parsed = s.sectionId && s.containerId ? s : this.parseSeat(s.seat_id);
+      if (!parsed.containerId) {
+        parsed.containerId = `seatmapContainer-section-${parsed.sectionId}`;
+      }
+      SeatmapSection.changeSeatStatus(parsed, "blocked");
     });
   }
 
