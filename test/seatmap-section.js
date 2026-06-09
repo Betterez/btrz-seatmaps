@@ -255,4 +255,77 @@ describe("Seatmap section", function () {
     });
   });
 
-})
+  describe("Seat orientation", () => {
+    const buildOrientationSection = (customSeats) => {
+      return new SeatmapSection(
+        "grid",
+        {
+          allowSeatOrientation: true,
+          rowsEnumNoGaps: true,
+          seatsPerRowLeft: 2,
+          seatsPerRowRight: 2,
+          facilities: [
+            {
+              type: "driver", row: 1, col: 1, height: 1, width: 5, label: "",
+              alignment: { key: 1, value: "Left" }
+            }
+          ],
+          availableRows: 5,
+          availableCols: 5,
+          customSeats,
+          enumType: 2,
+          enumDir: 2,
+          startingSeatLabel: 1,
+          rowLabelType: 1,
+          seatLabelType: 1,
+          startingRowLabel: "1",
+          showRowLabels: true,
+          lastRowNoGap: true,
+          name: "Main",
+          capacity: 16,
+          seats: [],
+          rowLabelRange: ""
+        },
+        { isEditing: true }
+      );
+    };
+
+    it("Should default missing orientation to front when allowSeatOrientation is enabled", () => {
+      const section = buildOrientationSection([
+        { row: 2, col: 1, status: "available", label: "1" }
+      ]);
+      const seat = section.seats.find((s) => s.row === 2 && s.col === 1);
+
+      assert.equal(seat.orientation, "front");
+
+      section.draw();
+      assert.equal(
+        document.querySelector(`#grid [data-type='seat'][data-index='${seat.index}']`).getAttribute("data-orientation"),
+        "front"
+      );
+    });
+
+    it("Should not assign orientation when customSeat orientation is none", () => {
+      const section = buildOrientationSection([
+        { row: 2, col: 1, status: "available", label: "1", orientation: "none" },
+        { row: 2, col: 2, status: "available", label: "2", orientation: "rear" }
+      ]);
+      const plainSeat = section.seats.find((s) => s.row === 2 && s.col === 1);
+      const rearSeat = section.seats.find((s) => s.row === 2 && s.col === 2);
+
+      assert.equal(plainSeat.orientation, undefined);
+      assert.equal(rearSeat.orientation, "rear");
+
+      section.draw();
+      assert.equal(
+        document.querySelector(`#grid [data-type='seat'][data-index='${plainSeat.index}']`).getAttribute("data-orientation"),
+        null
+      );
+      assert.equal(
+        document.querySelector(`#grid [data-type='seat'][data-index='${rearSeat.index}']`).getAttribute("data-orientation"),
+        "rear"
+      );
+    });
+  });
+
+});

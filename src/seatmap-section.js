@@ -1816,7 +1816,10 @@ class SeatmapSection {
                 seat.seatId = this.getSeatId(seat);
 
                 if (this.allowSeatOrientation) {
-                    seat.orientation = customSeat && customSeat.orientation ? customSeat.orientation : "front";
+                    const orient = customSeat && customSeat.orientation;
+                    if (orient !== "none") {
+                        seat.orientation = orient || "front";
+                    }
                 }
                 if (customSeat && customSeat.bgcolor) {
                   seat.bgcolor = customSeat.bgcolor;
