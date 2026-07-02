@@ -35,9 +35,9 @@
   "homepage": "https://github.com/Betterez/btrz-seatmaps",
   "dependencies": {},
   "devDependencies": {
-    "@babel/cli": "7.28.6",
-    "@babel/core": "7.29.0",
-    "@babel/preset-env": "7.29.2",
-    "jsdom": "29.0.2"
+    "@babel/cli": "8.0.1",
+    "@babel/core": "8.0.1",
+    "@babel/preset-env": "8.0.2",
+    "jsdom": "29.1.1"
   }
 }
