@@ -1668,8 +1668,13 @@ class SeatmapSection {
       container.focus();
     }
 
+    // Reserved seats are selectable only in backoffice; never focus blocked/unavailable.
+    const statusSelector = this.isBackOffice
+      ? ":is([data-status='available'],[data-status='reserved'])"
+      : "[data-status='available']";
+
     for (let i = index; i < this.seats.length + 1; i++) {
-      if (this.#setFocusOnSeat(i, "[data-status='available']:not([data-selected=true])")) {
+      if (this.#setFocusOnSeat(i, `${statusSelector}:not([data-selected=true])`)) {
         break;
       }
     }

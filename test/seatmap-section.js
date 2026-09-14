@@ -229,6 +229,97 @@ describe("Seatmap section", function () {
         0
       );
     });
+
+    it("Should focus reserved seats with focusOnNextSelected in backoffice.", () => {
+      const section = buildSection({isBackOffice: true, isEditing: false});
+      section.draw();
+
+      document.querySelectorAll("#grid [data-type='seat'][data-status='available'][data-keynav='true']")
+        .forEach((el) => {
+          el.dataset.selected = "true";
+        });
+
+      section.focusOnNextSelected();
+
+      const focused = document.querySelector("#grid [data-focus='true']");
+      assert.ok(focused);
+      assert.equal(focused.dataset.status, "reserved");
+    });
+
+    it("Should not focus reserved seats with focusOnNextSelected outside backoffice.", () => {
+      const section = buildSection({isBackOffice: false, isEditing: true});
+      section.draw();
+
+      assert.equal(
+        document.querySelectorAll("#grid [data-type='seat'][data-status='reserved'][data-keynav='true']").length,
+        1
+      );
+
+      document.querySelectorAll("#grid [data-type='seat'][data-status='available'][data-keynav='true']")
+        .forEach((el) => {
+          el.dataset.selected = "true";
+        });
+
+      section.focusOnNextSelected();
+
+      const focused = document.querySelector("#grid [data-focus='true']");
+      assert.equal(focused, null);
+    });
+
+    it("Should not focus blocked or unavailable seats with focusOnNextSelected.", () => {
+      const section = new SeatmapSection(
+        "grid",
+        {
+          _id: "section-focus-blocked-test",
+          rowsEnumNoGaps: true,
+          seatsPerRowLeft: 2,
+          seatsPerRowRight: 2,
+          facilities: [
+            {
+              type: "driver", row: 1, col: 1, height: 1, width: 5, label: "",
+              alignment: { key: 1, value: "Left" }
+            }
+          ],
+          availableRows: 5,
+          availableCols: 5,
+          customSeats: [
+            { row: 2, col: 1, status: "blocked", label: "1" },
+            { row: 2, col: 2, status: "unavailable", label: "2" },
+            { row: 2, col: 4, status: "available", label: "3" }
+          ],
+          enumType: 2,
+          enumDir: 2,
+          startingSeatLabel: 1,
+          rowLabelType: 1,
+          seatLabelType: 1,
+          startingRowLabel: "1",
+          showRowLabels: true,
+          lastRowNoGap: true,
+          name: "Main",
+          capacity: 16,
+          seats: [],
+          rowLabelRange: ""
+        },
+        {isEditing: false},
+        true
+      );
+      section.draw();
+
+      document.querySelectorAll("#grid [data-type='seat'][data-status='blocked'], #grid [data-type='seat'][data-status='unavailable']")
+        .forEach((el) => {
+          el.dataset.keynav = "true";
+        });
+
+      document.querySelectorAll("#grid [data-type='seat'][data-status='available'][data-keynav='true']")
+        .forEach((el) => {
+          el.dataset.selected = "true";
+        });
+
+      section.focusOnNextSelected();
+
+      const focused = document.querySelector("#grid [data-focus='true']");
+      assert.equal(focused, null);
+    });
   });
 
   describe("Building seats from initial Shuttle bus template.", () => {
