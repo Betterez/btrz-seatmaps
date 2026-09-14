@@ -10,7 +10,7 @@
     "commit-transpile": "git add lib/ && git commit --allow-empty -m \"transpiled src\"",
     "preversion": "npm test && npm run transpile && npm run commit-transpile",
     "postversion": "git push origin main && git push --tags",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git rev-parse --is-inside-work-tree >/dev/null 2>&1 && git config core.hooksPath .githooks || true"
   },
   "repository": {
     "type": "git",
