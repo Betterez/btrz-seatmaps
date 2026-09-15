@@ -1190,6 +1190,7 @@ var Phoenix = (() => {
   return __toCommonJS(phoenix_exports);
 })();
 
+(function (global) {
 class SeatmapSocket {
   static channel = null;
   static channels = new Map();
@@ -2531,10 +2532,10 @@ class SeatmapIframe {
   }
 }
 
-try {
-  module.exports = {
-    SeatmapSection,
-    SeatmapIframe
-  };
-} catch (e) {
-}
+  global.SeatmapSocket ||= SeatmapSocket;
+  global.SeatmapSection ||= SeatmapSection;
+  global.SeatmapIframe ||= SeatmapIframe;
+  try {
+    module.exports = { SeatmapSection, SeatmapIframe };
+  } catch (e) {}
+})(typeof window !== "undefined" ? window : typeof globalThis !== "undefined" ? globalThis : this);
